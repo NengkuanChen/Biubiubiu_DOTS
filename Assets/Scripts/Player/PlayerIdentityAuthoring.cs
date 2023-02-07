@@ -36,6 +36,9 @@ namespace Player
             public override void Bake(PlayerIdentityAuthoring authoring)
             {
                 PlayerIdentity component = default(PlayerIdentity);
+                component.PlayerNickname = "Unnamed";
+                component.TeamId = -1;
+                component.InGameID = -1;
             }
         }
     }
