@@ -88,7 +88,11 @@ namespace Lobby
                 var networkIdComponent = networkIdFromEntity[reqSrc.ValueRO.SourceConnection];
                 var playerNickname = state.EntityManager.GetComponentData<PlayerJoinRequest>(reqEntity).PlayerNickname;
                 UnityEngine.Debug.Log($"'{worldName}' setting connection '{networkIdComponent.Value} : {playerNickname}' to in game");
-                int teamId = LobbyForm.Singleton<LobbyForm>().OnPlayerJoin(playerNickname.ToString());
+                
+                
+                LobbyForm.Singleton<LobbyForm>().OnPlayerJoin(playerNickname.ToString(), networkIdComponent.Value,out int teamId, out int positionID);
+                
+                
                 var player = commandBuffer.Instantiate(prefab);
                 
                 commandBuffer.SetName(player, $"PlayerIdentity{playerNickname}");
@@ -99,7 +103,8 @@ namespace Lobby
                 {
                     PlayerNickname = playerNickname,
                     TeamId = teamId,
-                    InGameID = networkIdComponent.Value
+                    InGameID = networkIdComponent.Value,
+                    LobbyPositionID = positionID
                 });
                 
                 commandBuffer.SetComponent(player, new GhostOwnerComponent { NetworkId = networkIdComponent.Value});

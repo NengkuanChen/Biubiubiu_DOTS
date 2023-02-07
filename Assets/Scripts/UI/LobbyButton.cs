@@ -20,6 +20,9 @@ namespace UI
         private int teamID;
         public int TeamID => teamID;
         
+        private int playerInGameID = -1;
+        public int PlayerInGameID => playerInGameID;
+        
         public string Name
         {
             get => nameShow.text;
@@ -35,10 +38,18 @@ namespace UI
             base.OnInitialize();
             button.onClick.AddListener(()=>OnPlayerChangeTeamClicked());
         }
+        
+        public void SetPlayer(int playerID, string playerName)
+        {
+            playerInGameID = playerID;
+            Name = playerName;
+        }
+
+
 
         private void OnPlayerChangeTeamClicked()
         {
-            if (Name != "Empty")
+            if (playerInGameID != -1)
             {
                 return;
             }

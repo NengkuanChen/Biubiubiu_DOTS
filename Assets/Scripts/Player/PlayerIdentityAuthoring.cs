@@ -18,6 +18,14 @@ namespace Player
         [GhostField]
         public int InGameID;
 
+        [GhostField] 
+        public int LobbyPositionID;
+
+    }
+    
+    public struct PlayerReadyComponent : IComponentData
+    {
+        public bool IsReady;
     }
     
     [DisallowMultipleComponent]

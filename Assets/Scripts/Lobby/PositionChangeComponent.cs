@@ -19,11 +19,53 @@ namespace Lobby
     {
         public int targetTeamID;
         public int targetPositionID;
+        public int oPositionID;
+        public int oTeamID;
+        public FixedString32Bytes playerName;
+        public int PlayerID;
+    }
+    
+    
+    
+    [BurstCompile]
+    [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation)]
+    public partial struct PlayerChangePositionSystemClient : ISystem
+    {
+        public void OnCreate(ref SystemState state)
+        {
+            var builder = new EntityQueryBuilder(Allocator.Temp)
+                .WithAll<ReceiveRpcCommandRequestComponent>()
+                .WithAll<PlayerChangePositionConfirmation>();
+            state.RequireForUpdate(state.GetEntityQuery(builder));
+        }
+
+        public void OnDestroy(ref SystemState state)
+        {
+            
+        }
+
+        public void OnUpdate(ref SystemState state)
+        {
+            var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
+            foreach (var (req, e) in SystemAPI.Query<RefRO<ReceiveRpcCommandRequestComponent>>().WithAll<PlayerChangePositionConfirmation>().WithEntityAccess())
+            {
+                var positionChangeRequest = state.EntityManager.GetComponentData<PlayerChangePositionConfirmation>(e);
+                var success = LobbyForm.Singleton<LobbyForm>().OnPlayerPositionChange(
+                    positionChangeRequest.PlayerID,
+                    positionChangeRequest.targetTeamID,
+                    positionChangeRequest.targetPositionID,
+                    positionChangeRequest.oTeamID,
+                    positionChangeRequest.oPositionID,
+                    positionChangeRequest.playerName.ToString());
+                commandBuffer.DestroyEntity(e);
+            }
+            commandBuffer.Playback(state.EntityManager);
+        }
     }
     
     [BurstCompile]
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
-    public partial struct PlayerChangePositionSystem: ISystem
+    public partial struct PlayerChangePositionSystemServer: ISystem
     {
         public void OnCreate(ref SystemState state)
         {
@@ -44,33 +86,57 @@ namespace Lobby
         public void OnUpdate(ref SystemState state)
         {
             var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
-            
             foreach (var (req, reqEntity) in SystemAPI.Query<RefRO<ReceiveRpcCommandRequestComponent>>().WithAll<PositionChangeRequestComponent>().WithEntityAccess())
             {
+                var idComponent = state.GetComponentLookup<NetworkIdComponent>(true)[req.ValueRO.SourceConnection];
                 var positionChangeRequest = state.EntityManager.GetComponentData<PositionChangeRequestComponent>(reqEntity);
-                foreach (var identity in SystemAPI.Query<PlayerIdentity>())
+                var oPos = -1;
+                var oTeam = -1;
+                var nickName = "";
+                foreach (var (identity, identityEntity) in SystemAPI.Query<PlayerIdentity>().WithEntityAccess())
                 {
-                //     if (identity.InGameID == req.ValueRO)
-                //     {
-                //         
-                //     }
-                // }
-                // var success = LobbyForm.Singleton<LobbyForm>().OnPlayerPositionChange(
-                //     positionChangeRequest.targetTeamID, 
-                //     positionChangeRequest.targetPositionID,
-                //     
-                //
-                // if (success)
-                // {
-                //     var confirmation = commandBuffer.CreateEntity();
-                //     commandBuffer.AddComponent<PlayerChangePositionConfirmation>(confirmation, new PlayerChangePositionConfirmation()
-                //     {
-                //         targetTeamID = positionChangeRequest.targetTeamID,
-                //         targetPositionID = positionChangeRequest.targetPositionID
-                //     });
-                //     commandBuffer.AddComponent(confirmation, new SendRpcCommandRequestComponent { TargetConnection = Entity.Null });
+                    if (identity.InGameID == idComponent.Value)
+                    {
+                        LobbyForm.Singleton<LobbyForm>().GetPlayerInfo(identity.InGameID, out oTeam, out oPos);
+                        nickName = identity.PlayerNickname.ToString();
+                    }
+
+                    var success = LobbyForm.Singleton<LobbyForm>().OnPlayerPositionChange(
+                        idComponent.Value,
+                        positionChangeRequest.targetTeamID,
+                        positionChangeRequest.targetPositionID,
+                        oTeam,
+                        oPos,
+                        nickName);
+
+
+                    if (success)
+                    {
+                        
+                        var confirmation = commandBuffer.CreateEntity();
+                        commandBuffer.SetComponent(identityEntity, new PlayerIdentity()
+                        {
+                            LobbyPositionID = positionChangeRequest.targetPositionID,
+                            TeamId = positionChangeRequest.targetTeamID,
+                            PlayerNickname = identity.PlayerNickname,
+                            InGameID = identity.InGameID
+                        });
+                        commandBuffer.AddComponent<PlayerChangePositionConfirmation>(confirmation,
+                            new PlayerChangePositionConfirmation()
+                            {
+                                targetTeamID = positionChangeRequest.targetTeamID,
+                                targetPositionID = positionChangeRequest.targetPositionID,
+                                oPositionID = oPos,
+                                oTeamID = oTeam,
+                                playerName = nickName,
+                                PlayerID = idComponent.Value
+                            });
+                        commandBuffer.AddComponent(confirmation,
+                            new SendRpcCommandRequestComponent { TargetConnection = Entity.Null });
+                        Debug.Log($"PlayerChangePositionConfirmation sent to {nickName}");
+                    }
                 }
-                Debug.Log("Position change request");
+
                 // state.EntityManager.DestroyEntity(reqEntity);
                 commandBuffer.DestroyEntity(reqEntity);
             }

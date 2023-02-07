@@ -8,9 +8,6 @@ namespace UI
         
         private int teamASize;
         private int teamBSize;
-        
-        private int currentTeamID;
-        private int currentPositionID;
 
         private List<LobbyButton> teamAButtons = new List<LobbyButton>() {null, null, null};
         private List<LobbyButton> teamBButtons = new List<LobbyButton>(){null, null, null};
@@ -33,68 +30,125 @@ namespace UI
                 }
             }
         }
-
-        public int OnPlayerJoin(string playerName)
+        
+        public void GetPlayerInfo(int PlayerID, out int teamID, out int positionID)
         {
-            if (teamASize == 3 && teamBSize == 3)
+            teamID = -1;
+            positionID = -1;
+            foreach (var element in Elements)
             {
-                return -1;
-            }
-            if (teamASize > teamBSize)
-            {
-                teamBSize++;
-                foreach (var button in teamBButtons)
+                if (element is LobbyButton button)
                 {
-                    if (button.Name != "Empty")
+                    if (button.PlayerInGameID == PlayerID)
                     {
-                        continue;
+                        teamID = button.TeamID;
+                        positionID = button.PositionID;
+                        return;
                     }
-                    button.Name = playerName;
-                    break;
                 }
-                currentTeamID = 1;
-                return 1;
             }
-            foreach (var button in teamAButtons)
-            {
-                if (button.Name != "Empty")
-                {
-                    continue;
-                }
-                button.Name = playerName;
-                break;
-            }
-            teamASize++;
-            currentTeamID = 0;
-            return 0;
         }
         
-        public bool OnPlayerPositionChange(int teamID, int positionID, int oTeamID, int oPositionID, string playerName)
+        public bool SetButtonToPlayer(int playerID, int teamID, int positionID, string playerName)
+        {
+            
+            if (teamID == 0)
+            {
+                if (teamAButtons[positionID].PlayerInGameID != -1)
+                {
+                    return false;
+                }
+                teamAButtons[positionID].SetPlayer(playerID, playerName);
+                teamASize++;
+            }
+            else
+            {
+                if (teamBButtons[positionID].PlayerInGameID != -1)
+                {
+                    return false;
+                }
+                teamBButtons[positionID].SetPlayer(playerID, playerName);
+                teamBSize++;
+            }
+            return true;
+        }
+        
+        
+        public void ClearButton(int teamID, int positionID)
         {
             if (teamID == 0)
             {
-                if (teamAButtons[positionID].Name != "Empty")
+                if (teamAButtons[positionID].PlayerInGameID == -1)
                 {
-                    return false;
+                    return;
                 }
-                teamAButtons[positionID].Name = playerName;
+                teamAButtons[positionID].SetPlayer(-1, "Empty");
+                teamASize--;
             }
             else
             {
-                if (teamBButtons[positionID].Name != "Empty")
+                if (teamBButtons[positionID].PlayerInGameID == -1)
+                {
+                    return;
+                }
+                teamBButtons[positionID].SetPlayer(-1, "Empty");
+                teamBSize--;
+            }
+        }
+
+        public bool OnPlayerJoin(string playerName, int playerInGameID, out int teamID, out int positionID)
+        {
+            teamID = -1;
+            positionID = -1;
+            if (teamASize > teamBSize)
+            {
+                teamBSize++;
+                for (int i = 0; i < teamBButtons.Count; i++)
+                {
+                    if (teamBButtons[i].PlayerInGameID == -1)
+                    {
+                        SetButtonToPlayer(playerInGameID, 1, i, playerName);
+                        teamID = 1;
+                        positionID = i;
+                        return true;
+                    }
+                }
+                return false;
+            }
+            teamASize++;
+            for (int i = 0; i < teamAButtons.Count; i++)
+            {
+                if (teamAButtons[i].PlayerInGameID == -1)
+                {
+                    SetButtonToPlayer(playerInGameID, 0, i, playerName);
+                    teamID = 0;
+                    positionID = i;
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        
+        
+        public bool OnPlayerPositionChange(int playerID, int teamID, int positionID, int oTeamID, int oPositionID, string playerName)
+        {
+            if (teamID == 0)
+            {
+                if (teamAButtons[positionID].PlayerInGameID != -1)
                 {
                     return false;
                 }
-                teamBButtons[positionID].Name = playerName;
-            }
-            if (oTeamID == 0)
-            {
-                teamAButtons[oPositionID].Name = "Empty";
             }
             else
             {
-                teamBButtons[oPositionID].Name = "Empty";
+                if (teamBButtons[positionID].PlayerInGameID != -1)
+                {
+                    return false;
+                }
             }
+            SetButtonToPlayer(playerID, teamID, positionID, playerName);
+            ClearButton(oTeamID, oPositionID);
             return true;
         }
     }
