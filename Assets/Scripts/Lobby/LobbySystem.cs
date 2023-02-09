@@ -17,7 +17,7 @@ namespace Lobby
         {
             var builder = new EntityQueryBuilder(Allocator.Temp)
                 .WithAll<NetworkIdComponent>()
-                .WithNone<NetworkStreamInLobby>()
+                .WithNone<NetworkStreamInGame>()
                 .WithAll<NetworkStreamConnection>();
             state.RequireForUpdate(state.GetEntityQuery(builder));
         }
@@ -33,9 +33,9 @@ namespace Lobby
         {
             var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
             
-            foreach (var (id, entity) in SystemAPI.Query<RefRO<NetworkIdComponent>>().WithEntityAccess().WithNone<NetworkStreamInLobby>())
+            foreach (var (id, entity) in SystemAPI.Query<RefRO<NetworkIdComponent>>().WithEntityAccess().WithNone<NetworkStreamInGame>())
             {
-                commandBuffer.AddComponent<NetworkStreamInLobby>(entity);
+                commandBuffer.AddComponent<NetworkStreamInGame>(entity);
                 var req = commandBuffer.CreateEntity();
                 commandBuffer.AddComponent<PlayerJoinRequest>(req, new PlayerJoinRequest()
                 {
@@ -84,7 +84,7 @@ namespace Lobby
 
             foreach (var (reqSrc, reqEntity) in SystemAPI.Query<RefRO<ReceiveRpcCommandRequestComponent>>().WithAll<PlayerJoinRequest>().WithEntityAccess())
             {
-                commandBuffer.AddComponent<NetworkStreamInLobby>(reqSrc.ValueRO.SourceConnection);
+                commandBuffer.AddComponent<NetworkStreamInGame>(reqSrc.ValueRO.SourceConnection);
                 var networkIdComponent = networkIdFromEntity[reqSrc.ValueRO.SourceConnection];
                 var playerNickname = state.EntityManager.GetComponentData<PlayerJoinRequest>(reqEntity).PlayerNickname;
                 UnityEngine.Debug.Log($"'{worldName}' setting connection '{networkIdComponent.Value} : {playerNickname}' to in game");

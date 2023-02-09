@@ -71,7 +71,6 @@ namespace Lobby
         {
             var builder = new EntityQueryBuilder(Allocator.Temp)
                 .WithAll<ReceiveRpcCommandRequestComponent>()
-                .WithNone<NetworkStreamInLobby>()
                 .WithAll<PositionChangeRequestComponent>();
             state.RequireForUpdate<PlayerIdentity>();
             state.RequireForUpdate(state.GetEntityQuery(builder));

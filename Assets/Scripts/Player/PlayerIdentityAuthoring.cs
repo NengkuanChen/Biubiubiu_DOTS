@@ -12,15 +12,17 @@ namespace Player
         [GhostField]
         public FixedString32Bytes PlayerNickname;
 
-        [GhostField] 
+        // [GhostField]
+        // public Byte[] PlayerNicknameBytes;
+
+        
         public int TeamId;
 
-        [GhostField]
+        
         public int InGameID;
 
-        [GhostField] 
+        
         public int LobbyPositionID;
-
     }
     
     public struct PlayerReadyComponent : IComponentData
@@ -36,7 +38,7 @@ namespace Player
             public override void Bake(PlayerIdentityAuthoring authoring)
             {
                 PlayerIdentity component = default(PlayerIdentity);
-                component.PlayerNickname = "Unnamed";
+                // component.PlayerNicknameBytes = "Unnamed".to;
                 component.TeamId = -1;
                 component.InGameID = -1;
             }
