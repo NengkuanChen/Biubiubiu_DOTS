@@ -27,6 +27,9 @@ namespace UI
         
         [SerializeField]
         private Button createHostButton;
+        
+        [SerializeField]
+        private Button createServerButton;
 
         private String nickName;
         public String NickName => nickName;
@@ -38,10 +41,16 @@ namespace UI
             base.OnInitialize();
             joinServerButton.onClick.AddListener(OnJoinServerButtonClicked);
             createHostButton.onClick.AddListener(OnCreateHostButtonClicked);
+            createServerButton.onClick.AddListener(OnCreateServerButtonClicked);
             Debug.Log("Local IP: " + NetworkEndpoint.LoopbackIpv4.Address);
 #if UNITY_SERVER
             ServerLaunch();
 #endif
+        }
+
+        private void OnCreateServerButtonClicked()
+        {
+            ServerLaunch();
         }
 
         private void ServerLaunch()
@@ -56,8 +65,8 @@ namespace UI
                 using var drvQuery = server.EntityManager.CreateEntityQuery(ComponentType.ReadWrite<NetworkStreamDriver>());
                 drvQuery.GetSingletonRW<NetworkStreamDriver>().ValueRW.Listen(ep);
             }
-            CloseSelf();
             UIManager.Singleton.ShowForm<LobbyForm>();
+            CloseSelf();
         }
 
         private void OnCreateHostButtonClicked()
