@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using DefaultNamespace;
 using Player;
 using UI;
@@ -7,6 +8,7 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.NetCode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Lobby
 {
@@ -170,6 +172,8 @@ namespace Lobby
             foreach (var (request, entity) in SystemAPI.Query<RefRO<ReceiveRpcCommandRequestComponent>>().WithAll<PlayerReadyRequest>().WithEntityAccess())
             {
                 var playerID = networkIdFromEntity[request.ValueRO.SourceConnection].Value;
+                bool allReady = true;
+                int readyCount = 0;
                 foreach (var (playerIdentity, e) in SystemAPI.Query<RefRW<PlayerIdentity>>().WithEntityAccess())
                 {
                     if (playerIdentity.ValueRO.InGameID == playerID)
@@ -191,10 +195,41 @@ namespace Lobby
                         commandBuffer.AddComponent(playerIdentityUpdate, new SendRpcCommandRequestComponent { TargetConnection = Entity.Null });
                         break;
                     }
+                    if (!playerIdentity.ValueRO.IsReady)
+                    {
+                        allReady = false;
+                    }
+                    else
+                    {
+                        readyCount++;
+                    }
+                }
+                if (allReady && readyCount > 1)
+                {
+                    StartLoadingBattleScene().Forget();
                 }
                 commandBuffer.DestroyEntity(entity);
             }
             commandBuffer.Playback(state.EntityManager);
+        }
+
+        public async UniTaskVoid StartLoadingBattleScene()
+        {
+            var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
+            var sceneLoadRequest = commandBuffer.CreateEntity();
+            commandBuffer.AddComponent(sceneLoadRequest, new StartLoadingSceneCommand()
+            {
+                LoadSceneName = "BattleScene",
+                UnloadSceneName = "Lobby",
+            });
+            commandBuffer.AddComponent(sceneLoadRequest, new SendRpcCommandRequestComponent { TargetConnection = Entity.Null });
+            var loadingSceneEntity = commandBuffer.CreateEntity();
+            commandBuffer.AddComponent(loadingSceneEntity, new StartLoadSceneComponent()
+            {
+                LoadSceneName = "Battle",
+                UnloadSceneName = "Lobby",
+            });
+            commandBuffer.Playback(World.DefaultGameObjectInjectionWorld.EntityManager);
         }
     }
     
@@ -259,5 +294,7 @@ namespace Lobby
         public int PositionID;
         public int TeamID;
     }
+    
+   
     
 }
