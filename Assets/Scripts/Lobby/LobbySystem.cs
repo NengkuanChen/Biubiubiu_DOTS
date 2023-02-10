@@ -41,6 +41,7 @@ namespace Lobby
                 {
                     PlayerNickname = MainMenuForm.Singleton<MainMenuForm>().NickName
                 });
+                MainMenuForm.Singleton<MainMenuForm>().OnConnectedToServer();
                 
                 commandBuffer.AddComponent(req, new SendRpcCommandRequestComponent { TargetConnection = entity });
             }

@@ -55,7 +55,7 @@ namespace UI
 
         private void ServerLaunch()
         {
-            var server = ClientServerBootstrap.CreateServerWorld("ServerWorld");
+            var server = GameBootstrap.CreateServerWorld("ServerWorld");
             DestroyLocalSimulationWorld();
             SceneManager.LoadSceneAsync("Lobby", LoadSceneMode.Additive);
             if (World.DefaultGameObjectInjectionWorld == null)
@@ -71,8 +71,8 @@ namespace UI
 
         private void OnCreateHostButtonClicked()
         {
-            var server = ClientServerBootstrap.CreateServerWorld("ServerWorld");
-            var client = ClientServerBootstrap.CreateClientWorld("ClientWorld");
+            var server = GameBootstrap.CreateServerWorld("ServerWorld");
+            var client = GameBootstrap.CreateClientWorld("ClientWorld");
             DestroyLocalSimulationWorld();
             SceneManager.LoadSceneAsync("Lobby", LoadSceneMode.Additive);
             if (World.DefaultGameObjectInjectionWorld == null)
@@ -83,23 +83,34 @@ namespace UI
                 using var drvQuery = server.EntityManager.CreateEntityQuery(ComponentType.ReadWrite<NetworkStreamDriver>());
                 drvQuery.GetSingletonRW<NetworkStreamDriver>().ValueRW.Listen(ep);
             }
-            
-            
-            
-            ep = NetworkEndpoint.LoopbackIpv4.WithPort(port);
+
+            //
+            // ep = NetworkEndpoint.LoopbackIpv4.WithPort(port);
+            // {
+            //     using var drvQuery = client.EntityManager.CreateEntityQuery(ComponentType.ReadWrite<NetworkStreamDriver>());
+            //     drvQuery.GetSingletonRW<NetworkStreamDriver>().ValueRW.Connect(client.EntityManager, ep);
+            // }
+            ep = NetworkEndpoint.Parse(ipInputField.text, port);
             {
                 using var drvQuery = client.EntityManager.CreateEntityQuery(ComponentType.ReadWrite<NetworkStreamDriver>());
                 drvQuery.GetSingletonRW<NetworkStreamDriver>().ValueRW.Connect(client.EntityManager, ep);
             }
             
+            
+            
             // LobbySystemClient.Singleton.SendPlayerIdentity();
+            
+        }
+
+        public void OnConnectedToServer()
+        {
             CloseSelf();
             UIManager.Singleton.ShowForm<LobbyForm>();
         }
 
         private void OnJoinServerButtonClicked()
         {
-            var client = ClientServerBootstrap.CreateClientWorld("ClientWorld");
+            var client = GameBootstrap.CreateClientWorld("ClientWorld");
             DestroyLocalSimulationWorld();
             SceneManager.LoadSceneAsync("Lobby", LoadSceneMode.Additive);
             if (World.DefaultGameObjectInjectionWorld == null)
@@ -110,14 +121,17 @@ namespace UI
                 using var drvQuery = client.EntityManager.CreateEntityQuery(ComponentType.ReadWrite<NetworkStreamDriver>());
                 drvQuery.GetSingletonRW<NetworkStreamDriver>().ValueRW.Connect(client.EntityManager, ep);
             }
+            
+            // var connectRequest = client.EntityManager.CreateEntity(typeof(NetworkStreamRequestConnect));
+            // client.EntityManager.SetComponentData(connectRequest, new NetworkStreamRequestConnect { Endpoint = ep });
             // LobbySystemClient.Singleton.SendPlayerIdentity();
-            UIManager.Singleton.ShowForm<LobbyForm>();
-            CloseSelf();
+            // UIManager.Singleton.ShowForm<LobbyForm>();
+            // CloseSelf();
         }
         
         private void DestroyLocalSimulationWorld()
         {
-            WorldGetter.GetLocalWorld().Dispose();
+            WorldGetter.GetLocalWorld()?.Dispose();
         }
         
     }
