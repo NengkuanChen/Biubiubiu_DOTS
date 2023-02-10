@@ -94,7 +94,10 @@ namespace UI
                     return false;
                 }
                 teamAButtons[positionID].SetPlayer(playerID, playerName);
-                teamASize++;
+                if (playerID != -1)
+                {
+                    teamASize++;
+                }
             }
             else
             {
@@ -103,7 +106,11 @@ namespace UI
                     return false;
                 }
                 teamBButtons[positionID].SetPlayer(playerID, playerName);
-                teamBSize++;
+                if (playerID != -1)
+                {
+                    teamBSize++;
+
+                }
             }
             return true;
         }
@@ -187,6 +194,12 @@ namespace UI
             SetButtonToPlayer(playerID, teamID, positionID, playerName);
             ClearButton(oTeamID, oPositionID);
             return true;
+        }
+
+        public void OnPlayerInfoUpdate(int playerID, string playerNickName, int teamId, int positionId, bool isReady)
+        {
+            SetButtonToPlayer(playerID, teamId, positionId, playerNickName);
+            OnPlayerReady(playerID, isReady);
         }
     }
 }
