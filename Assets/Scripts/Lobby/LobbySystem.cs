@@ -104,7 +104,8 @@ namespace Lobby
                     PlayerNickname = playerNickname,
                     TeamId = teamId,
                     InGameID = networkIdComponent.Value,
-                    LobbyPositionID = positionID
+                    LobbyPositionID = positionID,
+                    IsReady = false
                 });
                 
                 commandBuffer.SetComponent(player, new GhostOwnerComponent { NetworkId = networkIdComponent.Value});
@@ -115,7 +116,91 @@ namespace Lobby
             commandBuffer.Playback(state.EntityManager);
         }
     }
-    
+
+
+    [BurstCompile]
+    [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
+    public partial struct PlayerReadySystemServer : ISystem
+    {
+        private ComponentLookup<NetworkIdComponent> networkIdFromEntity;
+        public void OnCreate(ref SystemState state)
+        {
+            var builder = new EntityQueryBuilder(Allocator.Temp)
+                .WithAll<PlayerReadyRequest>()
+                .WithAll<ReceiveRpcCommandRequestComponent>();
+            state.RequireForUpdate(state.GetEntityQuery(builder));
+            networkIdFromEntity = state.GetComponentLookup<NetworkIdComponent>(true);
+        }
+
+        public void OnDestroy(ref SystemState state)
+        {
+            
+        }
+
+        public void OnUpdate(ref SystemState state)
+        {
+            networkIdFromEntity.Update(ref state);
+            var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
+            foreach (var (request, entity) in SystemAPI.Query<RefRO<ReceiveRpcCommandRequestComponent>>().WithAll<PlayerReadyRequest>().WithEntityAccess())
+            {
+                var playerID = networkIdFromEntity[request.ValueRO.SourceConnection].Value;
+                foreach (var (playerIdentity, e) in SystemAPI.Query<PlayerIdentity>().WithEntityAccess())
+                {
+                    if (playerIdentity.InGameID == playerID)
+                    {
+                        commandBuffer.SetComponent(e, new PlayerIdentity()
+                        {
+                            PlayerNickname = playerIdentity.PlayerNickname,
+                            TeamId = playerIdentity.TeamId,
+                            InGameID = playerIdentity.InGameID,
+                            LobbyPositionID = playerIdentity.LobbyPositionID,
+                            IsReady = !playerIdentity.IsReady
+                        });
+                        var readyConfirm = commandBuffer.CreateEntity();
+                        commandBuffer.AddComponent(readyConfirm, new PlayerReadyRequest()
+                        {
+                            InGameID = playerID,
+                            IsReady = !playerIdentity.IsReady
+                        });
+                        Debug.Log($"Player {playerIdentity.PlayerNickname} is ready: {!playerIdentity.IsReady}");
+                        commandBuffer.AddComponent(readyConfirm, new SendRpcCommandRequestComponent { TargetConnection = Entity.Null });
+                        break;
+                    }
+                }
+                commandBuffer.DestroyEntity(entity);
+            }
+            commandBuffer.Playback(state.EntityManager);
+        }
+    }
+
+    [BurstCompile]
+    [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.ThinClientSimulation)]
+    public partial struct PlayerReadySystemClient : ISystem
+    {
+        public void OnCreate(ref SystemState state)
+        {
+            var builder = new EntityQueryBuilder(Allocator.Temp)
+                .WithAll<PlayerReadyRequest>()
+                .WithAll<ReceiveRpcCommandRequestComponent>();
+            state.RequireForUpdate(state.GetEntityQuery(builder));
+        }
+
+        public void OnDestroy(ref SystemState state)
+        {
+            
+        }
+
+        public void OnUpdate(ref SystemState state)
+        {
+            var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
+            foreach (var (playerReady, e) in SystemAPI.Query<PlayerReadyRequest>().WithAll<ReceiveRpcCommandRequestComponent>().WithEntityAccess())
+            {
+                LobbyForm.Singleton<LobbyForm>().OnPlayerReady(playerReady.InGameID, playerReady.IsReady);
+                commandBuffer.DestroyEntity(e);
+            }
+            commandBuffer.Playback(state.EntityManager);
+        }
+    }
 
     public struct NetworkStreamInLobby : IComponentData
     {
@@ -124,6 +209,12 @@ namespace Lobby
     public struct PlayerJoinRequest : IRpcCommand
     {
         public FixedString32Bytes PlayerNickname;
+    }
+    
+    public struct PlayerReadyRequest : IRpcCommand
+    {
+        public int InGameID;
+        public bool IsReady;
     }
     
     

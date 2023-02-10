@@ -20,6 +20,7 @@ namespace UI
         private int teamID;
         public int TeamID => teamID;
         
+        
         private int playerInGameID = -1;
         public int PlayerInGameID => playerInGameID;
         
@@ -67,6 +68,11 @@ namespace UI
                     TargetConnection = default
                 });
             }
+        }
+        
+        public void OnPlayerReady(bool isReady)
+        {
+            button.image.color = isReady ? Color.green : Color.white;
         }
     }
 }

@@ -1,5 +1,10 @@
 ﻿using System.Collections.Generic;
+using DefaultNamespace;
+using Lobby;
+using Player;
+using Unity.NetCode;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace UI
 {
@@ -8,6 +13,9 @@ namespace UI
         
         private int teamASize;
         private int teamBSize;
+        
+        [SerializeField]
+        private Button readyButton;
 
         private List<LobbyButton> teamAButtons = new List<LobbyButton>() {null, null, null};
         private List<LobbyButton> teamBButtons = new List<LobbyButton>(){null, null, null};
@@ -29,8 +37,35 @@ namespace UI
                     }
                 }
             }
+            readyButton.onClick.AddListener(OnReadyButtonClicked);
+        }
+
+        private void OnReadyButtonClicked()
+        {
+            if (WorldGetter.GetClientWorld() != null)
+            {
+                var newEntity = WorldGetter.GetClientWorld().EntityManager.CreateEntity();
+                WorldGetter.GetClientWorld().EntityManager.AddComponentData(newEntity, new PlayerReadyRequest());
+                WorldGetter.GetClientWorld().EntityManager
+                    .AddComponentData(newEntity, new SendRpcCommandRequestComponent(){ TargetConnection = default});
+                
+            }
         }
         
+        public void OnPlayerReady(int playerID, bool isReady)
+        {
+            foreach (var element in Elements)
+            {
+                if (element is LobbyButton button)
+                {
+                    if (button.PlayerInGameID == playerID)
+                    {
+                        button.OnPlayerReady(isReady);
+                    }
+                }
+            }
+        }
+
         public void GetPlayerInfo(int PlayerID, out int teamID, out int positionID)
         {
             teamID = -1;
@@ -83,6 +118,7 @@ namespace UI
                     return;
                 }
                 teamAButtons[positionID].SetPlayer(-1, "Empty");
+                teamAButtons[positionID].OnPlayerReady(false);
                 teamASize--;
             }
             else
@@ -92,6 +128,7 @@ namespace UI
                     return;
                 }
                 teamBButtons[positionID].SetPlayer(-1, "Empty");
+                teamBButtons[positionID].OnPlayerReady(false);
                 teamBSize--;
             }
         }

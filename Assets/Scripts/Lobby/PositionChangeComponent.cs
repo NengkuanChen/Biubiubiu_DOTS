@@ -118,7 +118,8 @@ namespace Lobby
                             LobbyPositionID = positionChangeRequest.targetPositionID,
                             TeamId = positionChangeRequest.targetTeamID,
                             PlayerNickname = identity.PlayerNickname,
-                            InGameID = identity.InGameID
+                            InGameID = identity.InGameID,
+                            IsReady = false
                         });
                         commandBuffer.AddComponent<PlayerChangePositionConfirmation>(confirmation,
                             new PlayerChangePositionConfirmation()

@@ -15,20 +15,19 @@ namespace Player
         // [GhostField]
         // public Byte[] PlayerNicknameBytes;
 
-        
+        [GhostField]
         public int TeamId;
 
-        
+        [GhostField]
         public int InGameID;
 
-        
+        [GhostField]
         public int LobbyPositionID;
-    }
-    
-    public struct PlayerReadyComponent : IComponentData
-    {
+
+        [GhostField] 
         public bool IsReady;
     }
+    
     
     [DisallowMultipleComponent]
     public class PlayerIdentityAuthoring : MonoBehaviour
