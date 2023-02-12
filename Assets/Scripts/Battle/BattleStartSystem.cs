@@ -1,4 +1,5 @@
 ﻿using Lobby;
+using UI;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -32,14 +33,18 @@ namespace DefaultNamespace.Battle
             networkIdFromEntity.Update(ref state);
             var isServerReady = false;
             var isClientReady = false;
-            foreach (var serverReady in SystemAPI.Query<ServerReadyToStartTag>())
+            var serverReadyEntity = Entity.Null;
+            var clientReadyEntity = Entity.Null;
+            foreach (var (serverReady, e) in SystemAPI.Query<ServerReadyToStartTag>().WithEntityAccess())
             {
                 isServerReady = true;
+                serverReadyEntity = e;
             }
 
-            foreach (var clientReady in SystemAPI.Query<ClientReadyToStartTag>())
+            foreach (var (clientReady, e) in SystemAPI.Query<ClientReadyToStartTag>().WithEntityAccess())
             {
                 isClientReady = true;
+                clientReadyEntity = e;
             }
 
             if (isClientReady && isServerReady)
@@ -47,14 +52,18 @@ namespace DefaultNamespace.Battle
                 var req = commandBuffer.CreateEntity();
                 commandBuffer.AddComponent<StartGameCommand>(req);
                 commandBuffer.AddComponent(req, new SendRpcCommandRequestComponent { TargetConnection = Entity.Null });
+                commandBuffer.DestroyEntity(serverReadyEntity);
+                commandBuffer.DestroyEntity(clientReadyEntity);
                 GameStart();
             }
             
             commandBuffer.Playback(state.EntityManager);
+            commandBuffer.Dispose();
         }
         
         private void GameStart()
         {
+            UIManager.Singleton.CloseForm<LoadingForm>();
             Debug.Log("Server: GameStart");
         }
     }
@@ -91,6 +100,7 @@ namespace DefaultNamespace.Battle
 
         private void GameStart(ref EntityCommandBuffer commandBuffer)
         {
+            UIManager.Singleton.CloseForm<LoadingForm>();
             commandBuffer.AddComponent(SystemAPI.GetSingletonEntity<NetworkIdComponent>(), new NetworkStreamInGame());
         }
     }

@@ -13,6 +13,7 @@ using UnityEngine.SceneManagement;
 
 namespace Lobby
 {
+    [BurstCompile]
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
     public partial struct LoadingSystemServer: ISystem
     {
@@ -55,22 +56,34 @@ namespace Lobby
                 commandBuffer.DestroyEntity(entity);
             }
             commandBuffer.Playback(state.EntityManager);
+            commandBuffer.Dispose();
             LoadSceneAsync(loadSceneName.ToString(), unloadSceneName.ToString());
         }
 
         
-        private void LoadSceneAsync(string loadScene, string unloadScene)
+        private async void LoadSceneAsync(string loadScene, string unloadScene)
         {
             Debug.Log("Server: LoadSceneAsync");
+            UIManager.Singleton.CloseForm<LobbyForm>();
+            UIManager.Singleton.ShowForm<LoadingForm>();
+            if (WorldGetter.GetClientWorld() != null)
+            {
+                Debug.Log("Host mode, no need to load server scene");
+            }
+            else
+            {
+                SceneManager.LoadScene(loadScene, LoadSceneMode.Additive);
+                SceneManager.UnloadScene(unloadScene);
+
+            }
             // await GameSceneManager.SwitchSceneAsync(loadScene, unloadScene);
-            SceneManager.LoadSceneAsync(loadScene, LoadSceneMode.Additive);
-            SceneManager.UnloadSceneAsync(unloadScene);
+            
             Debug.Log("Server: FinishedLoadScene");
             var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
             var serverFinishedLoad = commandBuffer.CreateEntity();
             commandBuffer.AddComponent(serverFinishedLoad, new ServerReadyToStartTag());
             commandBuffer.Playback(WorldGetter.GetServerWorld().EntityManager);
-            Debug.Log("Server Finished Loading");
+            // Debug.Log("Server Finished Loading");
         }
     }
     
@@ -106,25 +119,21 @@ namespace Lobby
                 commandBuffer.DestroyEntity(entity);
             }
             commandBuffer.Playback(state.EntityManager);
+            commandBuffer.Dispose();
             LoadSceneAsync(loadSceneName.ToString(), unloadSceneName.ToString());
         }
         
         
-        public void LoadSceneAsync(string loadScene, string unloadScene)
+        public async void LoadSceneAsync(string loadScene, string unloadScene)
         {
-            if (WorldGetter.GetServerWorld() != null)
-            {
-                return;
-            }
-            Debug.Log("Client: LoadSceneAsync");
+            UIManager.Singleton.CloseForm<LobbyForm>();
             UIManager.Singleton.ShowForm<LoadingForm>();
+            Debug.Log("Client: LoadSceneAsync");
+            await SceneManager.LoadSceneAsync(loadScene, LoadSceneMode.Additive);
             // await GameSceneManager.SwitchSceneAsync(loadScene, unloadScene)
-            SceneManager.LoadSceneAsync(loadScene, LoadSceneMode.Additive);
-            SceneManager.UnloadSceneAsync(unloadScene);
-            UIManager.Singleton.CloseForm<LoadingForm>();
+            await SceneManager.UnloadSceneAsync(unloadScene);
 
             Debug.Log("Client: FinishedLoadScene");
-            // var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
             var entityManager = WorldGetter.GetClientWorld().EntityManager;
             var finishedLoadingSceneRespond = new FinishedLoadingSceneRespond
             {
@@ -168,15 +177,18 @@ namespace Lobby
         {
             var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
             networkIdFromEntity.Update(ref state);
-            var hasFinishedLoading = true;
-            foreach (var (request, entity) in SystemAPI.Query<RefRO<ReceiveRpcCommandRequestComponent>>().WithAll<ClientFinishedLoadingSceneComponent>().WithEntityAccess())
+            var hasFinishedLoading = false;
+            foreach (var (request, entity) in SystemAPI.Query<RefRO<ReceiveRpcCommandRequestComponent>>().WithAll<FinishedLoadingSceneRespond>().WithEntityAccess())
             {
+                hasFinishedLoading = true;
+                
                 foreach (var finishedLoadingComponent in SystemAPI.Query<RefRW<ClientFinishedLoadingSceneComponent>>())
                 {
                     if (finishedLoadingComponent.ValueRW.PlayerID == networkIdFromEntity[request.ValueRO.SourceConnection].Value)
                     {
                         finishedLoadingComponent.ValueRW.HasFinishedLoading = true;
                         commandBuffer.AddComponent(request.ValueRO.SourceConnection, new NetworkStreamInGame());
+                        Debug.Log($"Client {networkIdFromEntity[request.ValueRO.SourceConnection].Value} Finished Loading");
                     }
                     hasFinishedLoading &= finishedLoadingComponent.ValueRW.HasFinishedLoading;
                 }
@@ -189,6 +201,7 @@ namespace Lobby
                 Debug.Log("All Clients Finished Loading");
             }
             commandBuffer.Playback(state.EntityManager);
+            commandBuffer.Dispose();
         }
         
         
