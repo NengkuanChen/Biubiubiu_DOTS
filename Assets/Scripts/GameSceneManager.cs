@@ -1,4 +1,5 @@
-﻿using Cysharp.Threading.Tasks;
+﻿using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -8,10 +9,10 @@ namespace DefaultNamespace
     {
         public static float SceneLoadProgress { get; private set; }
         
-        public static async UniTask SwitchSceneAsync(string loadScene, string unloadScene)
+        public static async Task SwitchSceneAsync(string loadScene, string unloadScene)
         {
             SceneLoadProgress = 0f;
-            SceneManager.UnloadSceneAsync(unloadScene).ToUniTask().Forget();
+            await SceneManager.UnloadSceneAsync(unloadScene);
             AsyncOperation asyncOperation = SceneManager.LoadSceneAsync(loadScene, LoadSceneMode.Additive);
             while (!asyncOperation.isDone)
             {

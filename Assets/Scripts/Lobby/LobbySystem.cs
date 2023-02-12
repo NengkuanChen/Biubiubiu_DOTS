@@ -190,10 +190,9 @@ namespace Lobby
                             LobbyPositionID = playerIdentity.ValueRO.LobbyPositionID,
                             IsReady = playerIdentity.ValueRO.IsReady
                         });
-                        Debug.Log($"Player {playerIdentity.ValueRO.PlayerNickname} is ready: {!playerIdentity.ValueRO.IsReady}");
+                        Debug.Log($"Player {playerIdentity.ValueRO.PlayerNickname} is ready: {playerIdentity.ValueRO.IsReady}");
                         LobbyForm.Singleton<LobbyForm>().OnPlayerReady(playerID, playerIdentity.ValueRW.IsReady);
                         commandBuffer.AddComponent(playerIdentityUpdate, new SendRpcCommandRequestComponent { TargetConnection = Entity.Null });
-                        break;
                     }
                     if (!playerIdentity.ValueRO.IsReady)
                     {
@@ -206,20 +205,20 @@ namespace Lobby
                 }
                 if (allReady && readyCount > 1)
                 {
-                    StartLoadingBattleScene().Forget();
+                    StartLoadingBattleScene(ref state, ref commandBuffer);
                 }
                 commandBuffer.DestroyEntity(entity);
             }
             commandBuffer.Playback(state.EntityManager);
         }
 
-        public async UniTaskVoid StartLoadingBattleScene()
+        public void StartLoadingBattleScene(ref SystemState state, ref EntityCommandBuffer commandBuffer)
         {
-            var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
+            commandBuffer = new EntityCommandBuffer(Allocator.Temp);
             var sceneLoadRequest = commandBuffer.CreateEntity();
             commandBuffer.AddComponent(sceneLoadRequest, new StartLoadingSceneCommand()
             {
-                LoadSceneName = "BattleScene",
+                LoadSceneName = "Battle",
                 UnloadSceneName = "Lobby",
             });
             commandBuffer.AddComponent(sceneLoadRequest, new SendRpcCommandRequestComponent { TargetConnection = Entity.Null });
@@ -229,7 +228,17 @@ namespace Lobby
                 LoadSceneName = "Battle",
                 UnloadSceneName = "Lobby",
             });
-            commandBuffer.Playback(World.DefaultGameObjectInjectionWorld.EntityManager);
+            foreach (var playerIdentity in SystemAPI.Query<RefRO<PlayerIdentity>>())
+            {
+                var entity = commandBuffer.CreateEntity();
+                commandBuffer.AddComponent(entity, new ClientFinishedLoadingSceneComponent
+                {
+                    PlayerID = playerIdentity.ValueRO.InGameID,
+                    HasFinishedLoading = false
+                });
+            }
+            Debug.Log("All players are ready, starting loading battle scene");
+            // commandBuffer.Playback(World.DefaultGameObjectInjectionWorld.EntityManager);
         }
     }
     
