@@ -203,7 +203,7 @@ namespace Lobby
                         readyCount++;
                     }
                 }
-                if (allReady && readyCount > 1)
+                if (allReady && readyCount > 0)
                 {
                     StartLoadingBattleScene(ref state, ref commandBuffer);
                 }

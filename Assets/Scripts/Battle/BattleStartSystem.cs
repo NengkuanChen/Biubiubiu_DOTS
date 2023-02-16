@@ -54,17 +54,27 @@ namespace DefaultNamespace.Battle
                 commandBuffer.AddComponent(req, new SendRpcCommandRequestComponent { TargetConnection = Entity.Null });
                 commandBuffer.DestroyEntity(serverReadyEntity);
                 commandBuffer.DestroyEntity(clientReadyEntity);
-                GameStart();
+                GameStart(commandBuffer, ref state);
             }
             
             commandBuffer.Playback(state.EntityManager);
             commandBuffer.Dispose();
         }
         
-        private void GameStart()
+        private void GameStart(EntityCommandBuffer commandBuffer, ref SystemState state)
         {
             UIManager.Singleton.CloseForm<LoadingForm>();
             Debug.Log("Server: GameStart");
+            //Test
+            foreach (var (networkID, entity) in SystemAPI.Query<RefRO<NetworkIdComponent>>().WithEntityAccess())
+            {
+                var playerPrefab = SystemAPI.GetSingleton<PlayerSpawner>().playerPrefab;
+                var player = commandBuffer.Instantiate(playerPrefab);
+                commandBuffer.AddComponent(entity, new NetworkStreamInGame());
+                commandBuffer.SetComponent(player, new GhostOwnerComponent { NetworkId = networkID.ValueRO.Value});
+            }
+            
+            
         }
     }
     
@@ -92,16 +102,17 @@ namespace DefaultNamespace.Battle
             var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
             foreach (var (request, entity) in SystemAPI.Query<RefRO<StartGameCommand>>().WithAll<ReceiveRpcCommandRequestComponent>().WithEntityAccess())
             {
-                GameStart(ref commandBuffer);
+                GameStart(ref commandBuffer, ref state);
                 commandBuffer.DestroyEntity(entity);
             }
             commandBuffer.Playback(state.EntityManager);
         }
 
-        private void GameStart(ref EntityCommandBuffer commandBuffer)
+        private void GameStart(ref EntityCommandBuffer commandBuffer, ref SystemState state)
         {
             UIManager.Singleton.CloseForm<LoadingForm>();
             commandBuffer.AddComponent(SystemAPI.GetSingletonEntity<NetworkIdComponent>(), new NetworkStreamInGame());
+            
         }
     }
     
