@@ -7,13 +7,14 @@ using Unity.Transforms;
 namespace Battle.TransformSynchronizer
 {
     [BurstCompile]
+    [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
     public partial struct TransformSyncSystem: ISystem
     {
         public void OnCreate(ref SystemState state)
         {
             var builder = new EntityQueryBuilder(Allocator.Temp)
                 .WithAll<TransformSyncEntity>()
-                .WithNone<TransformSyncEntityInitializerComponent>()
+                .WithNone<TransformSyncEntityInitializeComponent>()
                 .WithAll<EntitySyncFromGameObjectTag>();
             state.RequireForUpdate(state.GetEntityQuery(builder));
         }
@@ -28,7 +29,7 @@ namespace Battle.TransformSynchronizer
             // var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
             foreach (var (transformSyncComponent, entity) in SystemAPI.Query<RefRO<TransformSyncComponent>>()
                          .WithAll<TransformSyncEntity>()
-                         .WithNone<TransformSyncEntityInitializerComponent>()
+                         .WithNone<TransformSyncEntityInitializeComponent>()
                          .WithAll<EntitySyncFromGameObjectTag>()
                          .WithEntityAccess())
             {
@@ -37,11 +38,11 @@ namespace Battle.TransformSynchronizer
                 {
                     continue;
                 }
-                var globalPosition = transform.position;
-                var globalRotation = transform.rotation;
-                var transformComponent = state.EntityManager.GetComponentData<WorldTransform>(entity);
-                transformComponent.Position = globalPosition;
-                transformComponent.Rotation = globalRotation;
+                var localPosition = transform.localPosition;
+                var localRotation = transform.localRotation;
+                var transformComponent = state.EntityManager.GetComponentData<LocalTransform>(entity);
+                transformComponent.Position = localPosition;
+                transformComponent.Rotation = localRotation;
                 state.EntityManager.SetComponentData(entity, transformComponent);
             }
         }
@@ -56,7 +57,7 @@ namespace Battle.TransformSynchronizer
         {
             var builder = new EntityQueryBuilder(Allocator.Temp)
                 .WithAll<TransformSyncEntity>()
-                .WithAll<TransformSyncEntityInitializerComponent>();
+                .WithAll<TransformSyncEntityInitializeComponent>();
             state.RequireForUpdate(state.GetEntityQuery(builder));
         }
 
@@ -70,11 +71,11 @@ namespace Battle.TransformSynchronizer
             var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
             foreach (var (syncComponent, entity) 
                      in SystemAPI.Query<RefRW<TransformSyncEntity>>()
-                         .WithAll<TransformSyncEntityInitializerComponent>()
+                         .WithAll<TransformSyncEntityInitializeComponent>()
                          .WithEntityAccess())
             {
                 // var entityGroup = state.EntityManager.GetComponentData<LinkedEntityGroup>(entity);
-                var uniqueId = state.EntityManager.GetComponentData<TransformSyncEntityInitializerComponent>(entity)
+                var uniqueId = state.EntityManager.GetComponentData<TransformSyncEntityInitializeComponent>(entity)
                     .UniqueId;
                 syncComponent.ValueRW.UniqueId = uniqueId;
                 var linkedEntityGroup = state.EntityManager.GetBuffer<LinkedEntityGroup>(entity);
@@ -85,9 +86,10 @@ namespace Battle.TransformSynchronizer
                         var transformSyncComponent = state.EntityManager.GetComponentData<TransformSyncComponent>(linkedEntity.Value);
                         transformSyncComponent.UniqueId = uniqueId;
                         commandBuffer.SetComponent(linkedEntity.Value, transformSyncComponent);
+                        commandBuffer.AddComponent(linkedEntity.Value, new EntitySyncFromGameObjectTag());
                     }
                 }
-                commandBuffer.RemoveComponent<TransformSyncEntityInitializerComponent>(entity);
+                commandBuffer.RemoveComponent<TransformSyncEntityInitializeComponent>(entity);
             }
             commandBuffer.Playback(state.EntityManager);
             commandBuffer.Dispose();

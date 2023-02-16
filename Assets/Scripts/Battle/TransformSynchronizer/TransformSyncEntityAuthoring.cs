@@ -9,7 +9,7 @@ namespace Battle.TransformSynchronizer
         public int UniqueId;
     }
     
-    public struct TransformSyncEntityInitializerComponent : IComponentData
+    public struct TransformSyncEntityInitializeComponent : IComponentData
     {
         public int UniqueId;
     }
@@ -20,7 +20,7 @@ namespace Battle.TransformSynchronizer
         
     }
     
-    public struct EntitySyncFromGameObjectTag : IEnableableComponent
+    public struct EntitySyncFromGameObjectTag : IEnableableComponent, IComponentData
     {
         
     }

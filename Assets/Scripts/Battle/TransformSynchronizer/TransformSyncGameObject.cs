@@ -14,6 +14,7 @@ namespace Battle.TransformSynchronizer
         // public Dictionary<int, Transform> SyncTransformsDictionary => syncTransformsDictionary;
         
         private int uniqueId = 0;
+        
         public int UniqueId => uniqueId;
         
         

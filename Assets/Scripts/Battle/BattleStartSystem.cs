@@ -1,4 +1,5 @@
 ﻿using Battle;
+using Battle.TransformSynchronizer;
 using Lobby;
 using UI;
 using Unity.Burst;
@@ -73,7 +74,12 @@ namespace DefaultNamespace.Battle
                 var playerGameObjectSpawner =
                     PlayerGameObjectSpawner.Singleton.SpawnPlayerGameObject(Vector3.zero, quaternion.identity);
                 var uniqueId = playerGameObjectSpawner.UniqueId;
-                
+                var syncEntityPrefab = SystemAPI.GetSingleton<PlayerSpawner>().playerPrefab;
+                var syncEntity = commandBuffer.Instantiate(syncEntityPrefab);
+                commandBuffer.AddComponent(syncEntity, new TransformSyncEntityInitializeComponent {UniqueId = uniqueId});
+                commandBuffer.AddComponent<EntitySyncFromGameObjectTag>(syncEntity);
+                commandBuffer.AddComponent(entity, new NetworkStreamInGame());
+                commandBuffer.SetComponent(syncEntity, new GhostOwnerComponent { NetworkId = networkID.ValueRO.Value});
                 // var playerPrefab = SystemAPI.GetSingleton<PlayerSpawner>().playerPrefab;
                 // var player = commandBuffer.Instantiate(playerPrefab);
                 // commandBuffer.AddComponent(entity, new NetworkStreamInGame());
