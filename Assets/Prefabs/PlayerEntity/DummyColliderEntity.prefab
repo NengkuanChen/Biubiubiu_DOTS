@@ -1982,7 +1982,7 @@ GameObject:
   - component: {fileID: 6304603785312194117}
   - component: {fileID: 8816031441247471651}
   m_Layer: 0
-  m_Name: DummyEntity
+  m_Name: DummyColliderEntity
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

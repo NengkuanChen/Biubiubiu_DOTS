@@ -17,6 +17,11 @@ namespace Battle.TransformSynchronizer
             return uniqueId;
         }
 
+        
+        public static Transform GetSyncTransform(int uniqueId, int index)
+        {
+            return syncTransformGameObjects[uniqueId].GetSyncTransform(index);
+        }
 
     }
     

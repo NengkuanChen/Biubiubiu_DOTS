@@ -14,13 +14,13 @@ namespace Battle.TransformSynchronizer
         public int UniqueId;
     }
     
-    public struct TransformSyncComponent : IComponentData
+
+    public struct GameObjectSyncFromEntityTag : IEnableableComponent
     {
-        public int UniqueId;
+        
     }
-
-
-    public struct SyncWithGameObjectTag : IEnableableComponent
+    
+    public struct EntitySyncFromGameObjectTag : IEnableableComponent
     {
         
     }

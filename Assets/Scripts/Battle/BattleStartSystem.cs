@@ -1,8 +1,10 @@
-﻿using Lobby;
+﻿using Battle;
+using Lobby;
 using UI;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
 using Unity.NetCode;
 using UnityEngine;
 
@@ -68,10 +70,14 @@ namespace DefaultNamespace.Battle
             //Test
             foreach (var (networkID, entity) in SystemAPI.Query<RefRO<NetworkIdComponent>>().WithEntityAccess())
             {
-                var playerPrefab = SystemAPI.GetSingleton<PlayerSpawner>().playerPrefab;
-                var player = commandBuffer.Instantiate(playerPrefab);
-                commandBuffer.AddComponent(entity, new NetworkStreamInGame());
-                commandBuffer.SetComponent(player, new GhostOwnerComponent { NetworkId = networkID.ValueRO.Value});
+                var playerGameObjectSpawner =
+                    PlayerGameObjectSpawner.Singleton.SpawnPlayerGameObject(Vector3.zero, quaternion.identity);
+                var uniqueId = playerGameObjectSpawner.UniqueId;
+                
+                // var playerPrefab = SystemAPI.GetSingleton<PlayerSpawner>().playerPrefab;
+                // var player = commandBuffer.Instantiate(playerPrefab);
+                // commandBuffer.AddComponent(entity, new NetworkStreamInGame());
+                // commandBuffer.SetComponent(player, new GhostOwnerComponent { NetworkId = networkID.ValueRO.Value});
             }
             
             
