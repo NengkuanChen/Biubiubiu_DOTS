@@ -15,10 +15,10 @@ namespace Lobby
 {
     [BurstCompile]
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
-    public partial struct LoadingSystemServer: ISystem
+    public partial struct LoadingSystemServer : ISystem
     {
 
-        
+
         public void OnCreate(ref SystemState state)
         {
             var builder = new EntityQueryBuilder(Allocator.Temp)
@@ -28,39 +28,29 @@ namespace Lobby
 
         public void OnDestroy(ref SystemState state)
         {
-            
+
         }
 
-        
+
         public void OnUpdate(ref SystemState state)
         {
             var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
             var loadSceneName = new FixedString32Bytes();
             var unloadSceneName = new FixedString32Bytes();
-            foreach (var (StartLoadSceneComponent, entity) in SystemAPI.Query<RefRO<StartLoadSceneComponent>>().WithEntityAccess())
+            foreach (var (StartLoadSceneComponent, entity) in SystemAPI.Query<RefRO<StartLoadSceneComponent>>()
+                         .WithEntityAccess())
             {
                 loadSceneName = StartLoadSceneComponent.ValueRO.LoadSceneName;
                 unloadSceneName = StartLoadSceneComponent.ValueRO.UnloadSceneName;
-                var startLoadingSceneCommand = new StartLoadingSceneCommand
-                {
-                    LoadSceneName = loadSceneName,
-                    UnloadSceneName = unloadSceneName
-                };
-                var loadSceneRpc = commandBuffer.CreateEntity();
-                commandBuffer.AddComponent(loadSceneRpc, startLoadingSceneCommand);
-                commandBuffer.AddComponent(loadSceneRpc, new SendRpcCommandRequestComponent
-                {
-                    TargetConnection = Entity.Null
-                });
-                Debug.Log("Server: Loading Scene Command Sent");
                 commandBuffer.DestroyEntity(entity);
             }
+
             commandBuffer.Playback(state.EntityManager);
             commandBuffer.Dispose();
             LoadSceneAsync(loadSceneName.ToString(), unloadSceneName.ToString());
         }
 
-        
+
         private async void LoadSceneAsync(string loadScene, string unloadScene)
         {
             Debug.Log("Server: LoadSceneAsync");
@@ -72,12 +62,12 @@ namespace Lobby
             }
             else
             {
-                SceneManager.LoadScene(loadScene, LoadSceneMode.Additive);
-                SceneManager.UnloadScene(unloadScene);
+                await SceneManager.LoadSceneAsync(loadScene, LoadSceneMode.Additive);
+                await SceneManager.UnloadSceneAsync(unloadScene);
 
             }
             // await GameSceneManager.SwitchSceneAsync(loadScene, unloadScene);
-            
+
             Debug.Log("Server: FinishedLoadScene");
             var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
             var serverFinishedLoad = commandBuffer.CreateEntity();
@@ -86,12 +76,12 @@ namespace Lobby
             // Debug.Log("Server Finished Loading");
         }
     }
-    
-    
-    [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.ThinClientSimulation)]
-    public partial struct LoadingSystemClient: ISystem
+
+    [BurstCompile]
+    [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation)]
+    public partial struct LoadingSystemClient : ISystem
     {
-        
+
         public void OnCreate(ref SystemState state)
         {
             var builder = new EntityQueryBuilder(Allocator.Temp)
@@ -102,28 +92,30 @@ namespace Lobby
 
         public void OnDestroy(ref SystemState state)
         {
-            
+
         }
 
-        
+
         public void OnUpdate(ref SystemState state)
         {
             var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
             var loadSceneName = new FixedString32Bytes();
             var unloadSceneName = new FixedString32Bytes();
-            foreach (var (request, entity) in SystemAPI.Query<RefRO<StartLoadingSceneCommand>>().WithAll<ReceiveRpcCommandRequestComponent>().WithEntityAccess())
+            foreach (var (request, entity) in SystemAPI.Query<RefRO<StartLoadingSceneCommand>>()
+                         .WithAll<ReceiveRpcCommandRequestComponent>().WithEntityAccess())
             {
                 loadSceneName = request.ValueRO.LoadSceneName;
                 unloadSceneName = request.ValueRO.UnloadSceneName;
                 Debug.Log("Loading Command Received");
                 commandBuffer.DestroyEntity(entity);
             }
+
             commandBuffer.Playback(state.EntityManager);
             commandBuffer.Dispose();
             LoadSceneAsync(loadSceneName.ToString(), unloadSceneName.ToString());
         }
-        
-        
+
+
         public async void LoadSceneAsync(string loadScene, string unloadScene)
         {
             UIManager.Singleton.CloseForm<LobbyForm>();
@@ -149,14 +141,14 @@ namespace Lobby
             // entityManager.Playback(WorldGetter.GetClientWorld().EntityManager);
         }
     }
-    
+
     [BurstCompile]
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
-    public partial struct ReceiveFinishedLoadingSceneRespondSystem: ISystem
+    public partial struct ReceiveFinishedLoadingSceneRespondSystem : ISystem
     {
-        
+
         private ComponentLookup<NetworkIdComponent> networkIdFromEntity;
-        
+
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
@@ -169,7 +161,7 @@ namespace Lobby
 
         public void OnDestroy(ref SystemState state)
         {
-            
+
         }
 
         [BurstCompile]
@@ -178,34 +170,41 @@ namespace Lobby
             var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
             networkIdFromEntity.Update(ref state);
             var hasFinishedLoading = false;
-            foreach (var (request, entity) in SystemAPI.Query<RefRO<ReceiveRpcCommandRequestComponent>>().WithAll<FinishedLoadingSceneRespond>().WithEntityAccess())
+            foreach (var (request, entity) in SystemAPI.Query<RefRO<ReceiveRpcCommandRequestComponent>>()
+                         .WithAll<FinishedLoadingSceneRespond>().WithEntityAccess())
             {
                 hasFinishedLoading = true;
-                
+
                 foreach (var finishedLoadingComponent in SystemAPI.Query<RefRW<ClientFinishedLoadingSceneComponent>>())
                 {
-                    if (finishedLoadingComponent.ValueRW.PlayerID == networkIdFromEntity[request.ValueRO.SourceConnection].Value)
+                    if (finishedLoadingComponent.ValueRW.PlayerID ==
+                        networkIdFromEntity[request.ValueRO.SourceConnection].Value)
                     {
                         finishedLoadingComponent.ValueRW.HasFinishedLoading = true;
                         commandBuffer.AddComponent(request.ValueRO.SourceConnection, new NetworkStreamInGame());
-                        Debug.Log($"Client {networkIdFromEntity[request.ValueRO.SourceConnection].Value} Finished Loading");
+                        Debug.Log(
+                            $"Client {networkIdFromEntity[request.ValueRO.SourceConnection].Value} Finished Loading");
                     }
+
                     hasFinishedLoading &= finishedLoadingComponent.ValueRW.HasFinishedLoading;
                 }
+
                 commandBuffer.DestroyEntity(entity);
             }
+
             if (hasFinishedLoading)
             {
                 var clientReadyComponent = commandBuffer.CreateEntity();
-                commandBuffer.AddComponent(clientReadyComponent, new ClientReadyToStartTag());   
+                commandBuffer.AddComponent(clientReadyComponent, new ClientReadyToStartTag());
                 Debug.Log("All Clients Finished Loading");
             }
+
             commandBuffer.Playback(state.EntityManager);
             commandBuffer.Dispose();
         }
-        
-        
-        
+
+
+
     }
 
     public struct StartLoadingSceneCommand : IRpcCommand
@@ -213,41 +212,41 @@ namespace Lobby
         public FixedString32Bytes LoadSceneName;
         public FixedString32Bytes UnloadSceneName;
     }
-    
+
     public struct FinishedLoadingSceneRespond : IRpcCommand
     {
         public FixedString32Bytes LoadSceneName;
         public FixedString32Bytes UnloadSceneName;
     }
-    
+
     public struct StartLoadSceneComponent : IComponentData
     {
         public FixedString32Bytes LoadSceneName;
         public FixedString32Bytes UnloadSceneName;
     }
-    
+
     public struct StartGameCommand : IRpcCommand
     {
-        
+
     }
-    
+
     public struct SceneLoadCompleteComponent : IComponentData
     {
-        
+
     }
-    
+
     public struct ClientFinishedLoadingSceneComponent : IComponentData
     {
         public int PlayerID;
         public bool HasFinishedLoading;
     }
-    
+
     public struct ServerReadyToStartTag : IComponentData
     {
     }
-    
+
     public struct ClientReadyToStartTag : IComponentData
     {
+
     }
-    
 }
