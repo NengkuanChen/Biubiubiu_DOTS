@@ -8,17 +8,26 @@ namespace Battle
     {
         public static PlayerGameObjectSpawner Singleton;
 
-        public TransformSyncGameObject PlayerGameObjectPrefab;
+        public GameObject ServerGameObjectPrefab;
+        
+        public GameObject ClientGameObjectPrefab;
 
         private void Awake()
         {
             Singleton = this;
         }
 
-        public TransformSyncGameObject SpawnPlayerGameObject(Vector3 position, Quaternion rotation)
+        public GameObject SpawnServerPlayerGameObject(Vector3 position, Quaternion rotation)
         {
-            var playerGameObject = Instantiate(PlayerGameObjectPrefab, position, rotation);
-            playerGameObject.Initialize();
+            var playerGameObject = Instantiate(ServerGameObjectPrefab, position, rotation);
+            // playerGameObject.Initialize();
+            return playerGameObject;
+        }
+        
+        public GameObject SpawnClientPlayerGameObject(Vector3 position, Quaternion rotation)
+        {
+            var playerGameObject = Instantiate(ClientGameObjectPrefab, position, rotation);
+            // playerGameObject.Initialize();
             return playerGameObject;
         }
     }

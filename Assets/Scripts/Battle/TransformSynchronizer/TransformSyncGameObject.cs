@@ -25,6 +25,8 @@ namespace Battle.TransformSynchronizer
             return uniqueId;
         }
         
+        // public Initialize
+        
         public Transform GetSyncTransform(int index)
         {
             return syncTransforms[index];

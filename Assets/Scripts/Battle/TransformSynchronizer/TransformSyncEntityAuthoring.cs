@@ -15,7 +15,7 @@ namespace Battle.TransformSynchronizer
     }
     
 
-    public struct GameObjectSyncFromEntityTag : IEnableableComponent
+    public struct GameObjectSyncFromEntityTag : IEnableableComponent, IComponentData
     {
         
     }

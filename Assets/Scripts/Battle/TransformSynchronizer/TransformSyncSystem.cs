@@ -3,6 +3,7 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Transforms;
+using UnityEngine;
 
 namespace Battle.TransformSynchronizer
 {
@@ -14,8 +15,7 @@ namespace Battle.TransformSynchronizer
         {
             var builder = new EntityQueryBuilder(Allocator.Temp)
                 .WithAll<TransformSyncEntity>()
-                .WithNone<TransformSyncEntityInitializeComponent>()
-                .WithAll<EntitySyncFromGameObjectTag>();
+                .WithNone<TransformSyncEntityInitializeComponent>();
             state.RequireForUpdate(state.GetEntityQuery(builder));
         }
 
@@ -28,22 +28,40 @@ namespace Battle.TransformSynchronizer
         {
             // var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
             foreach (var (transformSyncComponent, entity) in SystemAPI.Query<RefRO<TransformSyncComponent>>()
-                         .WithAll<TransformSyncEntity>()
                          .WithNone<TransformSyncEntityInitializeComponent>()
                          .WithAll<EntitySyncFromGameObjectTag>()
                          .WithEntityAccess())
             {
-                var transform = TransformSyncManager.GetSyncTransform(transformSyncComponent.ValueRO.UniqueId, transformSyncComponent.ValueRO.Index);
+                var uid = transformSyncComponent.ValueRO.UniqueId;
+                var index = transformSyncComponent.ValueRO.Index;
+                var transform = TransformSyncManager.GetSyncTransform(uid, index);
                 if (transform == null)
                 {
                     continue;
                 }
-                var localPosition = transform.localPosition;
-                var localRotation = transform.localRotation;
-                var transformComponent = state.EntityManager.GetComponentData<LocalTransform>(entity);
-                transformComponent.Position = localPosition;
-                transformComponent.Rotation = localRotation;
+                var worldPosition = transform.position;
+                var worldRotation = transform.rotation;
+                var transformComponent = state.EntityManager.GetComponentData<WorldTransform>(entity);
+                transformComponent.Position = worldPosition;
+                transformComponent.Rotation = worldRotation;
                 state.EntityManager.SetComponentData(entity, transformComponent);
+            }
+
+            foreach (var (transformSyncComponent, entity) in SystemAPI.Query<RefRO<TransformSyncComponent>>()
+                         .WithNone<TransformSyncEntityInitializeComponent>()
+                         .WithAll<GameObjectSyncFromEntityTag>()
+                         .WithEntityAccess())
+            {
+                var uid = transformSyncComponent.ValueRO.UniqueId;
+                var index = transformSyncComponent.ValueRO.Index;
+                var transform = TransformSyncManager.GetSyncTransform(uid, index);
+                if (transform == null)
+                {
+                    continue;
+                }
+                var worldTransform = state.EntityManager.GetComponentData<WorldTransform>(entity);
+                transform.position = worldTransform.Position;
+                transform.rotation = worldTransform.Rotation;
             }
         }
     }

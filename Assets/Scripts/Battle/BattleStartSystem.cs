@@ -7,6 +7,7 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.NetCode;
+using Unity.NetCode.Hybrid;
 using UnityEngine;
 
 namespace DefaultNamespace.Battle
@@ -71,19 +72,25 @@ namespace DefaultNamespace.Battle
             //Test
             foreach (var (networkID, entity) in SystemAPI.Query<RefRO<NetworkIdComponent>>().WithEntityAccess())
             {
-                var playerGameObjectSpawner =
-                    PlayerGameObjectSpawner.Singleton.SpawnPlayerGameObject(Vector3.zero, quaternion.identity);
-                var uniqueId = playerGameObjectSpawner.UniqueId;
-                var syncEntityPrefab = SystemAPI.GetSingleton<PlayerSpawner>().playerPrefab;
-                var syncEntity = commandBuffer.Instantiate(syncEntityPrefab);
-                commandBuffer.AddComponent(syncEntity, new TransformSyncEntityInitializeComponent {UniqueId = uniqueId});
-                commandBuffer.AddComponent<EntitySyncFromGameObjectTag>(syncEntity);
-                commandBuffer.AddComponent(entity, new NetworkStreamInGame());
-                commandBuffer.SetComponent(syncEntity, new GhostOwnerComponent { NetworkId = networkID.ValueRO.Value});
-                // var playerPrefab = SystemAPI.GetSingleton<PlayerSpawner>().playerPrefab;
-                // var player = commandBuffer.Instantiate(playerPrefab);
+                // var playerGameObjectSpawner =
+                //     PlayerGameObjectSpawner.Singleton.SpawnServerPlayerGameObject(Vector3.zero, quaternion.identity);
+                // var uniqueId = playerGameObjectSpawner.UniqueId;
+                // var syncEntityPrefab = SystemAPI.GetSingleton<PlayerSpawner>().playerPrefab;
+                // var syncEntity = commandBuffer.Instantiate(syncEntityPrefab);
+                // commandBuffer.AddComponent(syncEntity, new TransformSyncEntityInitializeComponent {UniqueId = uniqueId});
+                // commandBuffer.AddComponent<EntitySyncFromGameObjectTag>(syncEntity);
                 // commandBuffer.AddComponent(entity, new NetworkStreamInGame());
-                // commandBuffer.SetComponent(player, new GhostOwnerComponent { NetworkId = networkID.ValueRO.Value});
+                // commandBuffer.SetComponent(syncEntity, new GhostOwnerComponent { NetworkId = networkID.ValueRO.Value});
+                
+                var playerPrefab = SystemAPI.GetSingleton<PlayerSpawner>().playerPrefab;
+                var player = commandBuffer.Instantiate(playerPrefab);
+                commandBuffer.AddComponent(entity, new NetworkStreamInGame());
+                commandBuffer.AddComponent(entity, new GhostPresentationGameObjectPrefab
+                {
+                    Server = PlayerGameObjectSpawner.Singleton.ServerGameObjectPrefab,
+                    Client = PlayerGameObjectSpawner.Singleton.ClientGameObjectPrefab
+                });
+                commandBuffer.SetComponent(player, new GhostOwnerComponent { NetworkId = networkID.ValueRO.Value});
             }
             
             

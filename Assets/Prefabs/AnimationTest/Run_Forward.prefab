@@ -1297,8 +1297,8 @@ GameObject:
   m_Component:
   - component: {fileID: 5620486667337504125}
   - component: {fileID: 5094743760425242566}
-  - component: {fileID: -5216018473206675718}
-  - component: {fileID: -2719067573832116942}
+  - component: {fileID: -9083133940496179031}
+  - component: {fileID: 1472298153684772854}
   m_Layer: 0
   m_Name: Run_Forward
   m_TagString: Untagged
@@ -1344,7 +1344,7 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
---- !u!114 &-5216018473206675718
+--- !u!114 &-9083133940496179031
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1353,10 +1353,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 5094743760425242567}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c16549610bfe4458aa9389201d072bb6, type: 3}
+  m_Script: {fileID: 11500000, guid: 0199cca95a2e14d5883379f33cc211e2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &-2719067573832116942
+--- !u!114 &1472298153684772854
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1365,19 +1365,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 5094743760425242567}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c79d771cedb4794bf100ce60df5f764, type: 3}
+  m_Script: {fileID: 11500000, guid: 7a6ecc053bb3d480d902deff8d7abe9b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  DefaultGhostMode: 0
-  SupportedGhostModes: 3
-  OptimizationMode: 0
-  Importance: 1
-  prefabId: 542c391eb3587fe4f84396f94839edbf
-  HasOwner: 0
-  SupportAutoCommandTarget: 1
-  TrackInterpolationDelay: 0
-  GhostGroup: 0
-  UsePreSerialization: 0
+  AnimationGraphAsset: {fileID: 0}
+  EvaluateGraphInPrediction: 0
+  IgnoreEvents: 0
 --- !u!1 &5218090727482634448
 GameObject:
   m_ObjectHideFlags: 0

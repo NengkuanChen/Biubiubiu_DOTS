@@ -1980,7 +1980,6 @@ GameObject:
   - component: {fileID: 2053788250629011057}
   - component: {fileID: 8060779882558903229}
   - component: {fileID: 6304603785312194117}
-  - component: {fileID: 8816031441247471651}
   m_Layer: 0
   m_Name: DummyColliderEntity
   m_TagString: Untagged
@@ -2032,24 +2031,12 @@ MonoBehaviour:
   SupportedGhostModes: 3
   OptimizationMode: 0
   Importance: 1
-  prefabId: 
+  prefabId: 5c41e3d7bbe150b408c2b4fd70c872eb
   HasOwner: 1
   SupportAutoCommandTarget: 1
   TrackInterpolationDelay: 0
   GhostGroup: 0
   UsePreSerialization: 0
---- !u!114 &8816031441247471651
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2053788250629011056}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 49e0123e3dc14d13b17a1976bf114bfb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &2053788250734491080
 GameObject:
   m_ObjectHideFlags: 0
