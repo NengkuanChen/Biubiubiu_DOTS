@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
-using DefaultNamespace;
+using Game;
 using Player;
 using UI;
 using Unity.Burst;
@@ -111,7 +111,8 @@ namespace Lobby
                     TeamId = teamId,
                     InGameID = networkIdComponent.Value,
                     LobbyPositionID = positionID,
-                    IsReady = false
+                    IsReady = false,
+                    SourceConnection = reqSrc.ValueRO.SourceConnection
                 });
                 foreach (var value in SystemAPI.Query<RefRO<PlayerIdentity>>())
                 {

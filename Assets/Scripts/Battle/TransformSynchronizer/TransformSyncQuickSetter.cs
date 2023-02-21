@@ -1,5 +1,5 @@
 ﻿using System;
-using DefaultNamespace.Battle.TransformSynchronizer;
+using Game.Battle.TransformSynchronizer;
 using UnityEngine;
 
 namespace Battle.TransformSynchronizer

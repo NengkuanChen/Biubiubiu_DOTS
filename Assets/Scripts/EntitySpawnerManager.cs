@@ -2,7 +2,7 @@
 using Unity.Scenes;
 using UnityEngine;
 
-namespace DefaultNamespace
+namespace Game
 {
     public class EntitySpawnerManager: MonoBehaviour
     {

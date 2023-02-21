@@ -2,7 +2,7 @@
 using Unity.NetCode;
 using UnityEngine;
 
-namespace DefaultNamespace.Battle
+namespace Game.Battle
 {
     public struct PlayerSpawner: IComponentData
     {

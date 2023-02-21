@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
-using DefaultNamespace;
-using DefaultNamespace.Battle;
+using Game;
+using Game.Battle;
 using Player;
 using UI;
 using Unity.Burst;

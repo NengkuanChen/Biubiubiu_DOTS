@@ -15,3 +15,16 @@ public struct MainEntityCamera : IComponentData
     public float BaseFoV;
     public float CurrentFoV;
 }
+
+
+[Serializable]
+public struct ViewModelCamera : IComponentData
+{
+    public ViewModelCamera(float fov)
+    {
+        BaseFoV = fov;
+        CurrentFoV = fov;
+    }
+    public float BaseFoV;
+    public float CurrentFoV;
+}

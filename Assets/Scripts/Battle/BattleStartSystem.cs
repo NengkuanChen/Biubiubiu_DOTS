@@ -1,17 +1,17 @@
 ﻿using Battle;
-using Battle.GameEntitySpawner;
-using Battle.TransformSynchronizer;
+using Battle.CharacterSpawn;
 using Lobby;
+using Player;
 using UI;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.NetCode;
-using Unity.NetCode.Hybrid;
+using Unity.Transforms;
 using UnityEngine;
 
-namespace DefaultNamespace.Battle
+namespace Game.Battle
 {
     [BurstCompile]
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
@@ -19,13 +19,13 @@ namespace DefaultNamespace.Battle
     {
         private ComponentLookup<NetworkIdComponent> networkIdFromEntity;
         
-        
+
         public void OnCreate(ref SystemState state)
         {
             var builder = new EntityQueryBuilder(Allocator.Temp).WithAny<ServerReadyToStartTag, ClientReadyToStartTag>();
             state.RequireForUpdate(state.GetEntityQuery(builder));
             networkIdFromEntity = state.GetComponentLookup<NetworkIdComponent>(true);
-            state.RequireForUpdate<GameEntitySpawnerComponent>();
+            state.RequireForUpdate<BattleEntitySpawner>();
         }
 
         public void OnDestroy(ref SystemState state)
@@ -60,22 +60,46 @@ namespace DefaultNamespace.Battle
                 commandBuffer.AddComponent(req, new SendRpcCommandRequestComponent { TargetConnection = Entity.Null });
                 commandBuffer.DestroyEntity(serverReadyEntity);
                 commandBuffer.DestroyEntity(clientReadyEntity);
-                GameStart(commandBuffer, ref state);
+                var gameEntitySpawner = SystemAPI.GetSingleton<BattleEntitySpawner>();
+                GameStart(commandBuffer, ref state, gameEntitySpawner);
             }
             
             commandBuffer.Playback(state.EntityManager);
             commandBuffer.Dispose();
         }
         
-        private void GameStart(EntityCommandBuffer commandBuffer, ref SystemState state)
+        private void GameStart(EntityCommandBuffer commandBuffer, ref SystemState state,BattleEntitySpawner battleEntitySpawner)
         {
             UIManager.Singleton.CloseForm<LoadingForm>();
             Debug.Log("Server: GameStart");
-            //Test
-            foreach (var (networkID, entity) in SystemAPI.Query<RefRO<NetworkIdComponent>>().WithEntityAccess())
+            
+            //Spawn Player For Each PlayerIdentity
+            foreach (var (playerIdentity, playerIdentityEntity) in SystemAPI.Query<PlayerIdentity>().WithEntityAccess())
             {
-                Cursor.lockState = CursorLockMode.Locked;
+                var playerEntity = commandBuffer.Instantiate(battleEntitySpawner.PlayerGhost);
+                var networkId = networkIdFromEntity[playerIdentity.SourceConnection];
+                commandBuffer.SetComponent(playerEntity, new GhostOwnerComponent
+                {
+                    NetworkId = networkId.Value
+                });
+                // commandBuffer.AppendToBuffer(playerEntity, );
+            
+                var spawnCharacterRequest = commandBuffer.CreateEntity();
+                commandBuffer.AddComponent(spawnCharacterRequest, new CharacterSpawnRequest
+                {
+                    ForConnection = playerIdentity.SourceConnection,
+                    SpawnPosition = new float3(0, 0, 0),
+                    ForPlayer = playerEntity,
+                    PlayerIdentity = playerIdentityEntity
+                });
             }
+            
+            //Test
+            // foreach (var (networkID, entity) in SystemAPI.Query<RefRO<NetworkIdComponent>>().WithEntityAccess())
+            // {
+            //     Cursor.lockState = CursorLockMode.Locked;
+            // }
+            Cursor.lockState = CursorLockMode.Locked;
             
             
         }
@@ -93,6 +117,7 @@ namespace DefaultNamespace.Battle
                 .WithAll<ReceiveRpcCommandRequestComponent>()
                 .WithAll<StartGameCommand>();
             state.RequireForUpdate(state.GetEntityQuery(builder));
+            // state.RequireForUpdate<FirstPersonCharacterComponent>();
         }
 
         public void OnDestroy(ref SystemState state)
@@ -116,11 +141,67 @@ namespace DefaultNamespace.Battle
             UIManager.Singleton.CloseForm<LoadingForm>();
             commandBuffer.AddComponent(SystemAPI.GetSingletonEntity<NetworkIdComponent>(), new NetworkStreamInGame());
             Cursor.lockState = CursorLockMode.Locked;
+            
         }
     }
     
+    [BurstCompile]
+    [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.ThinClientSimulation)]
+    public partial struct CameraSetUpSystemClient : ISystem
+    {
+        public void OnCreate(ref SystemState state)
+        {
+            var builder = new EntityQueryBuilder(Allocator.Temp)
+                .WithAll<FirstPersonCharacterComponent>()
+                .WithAll<OwningPlayer>()
+                .WithAll<GhostOwnerComponent>()
+                .WithNone<CharacterInBattleTag>();
+            state.RequireForUpdate<BattleEntitySpawner>();
+            state.RequireForUpdate(state.GetEntityQuery(builder));
+        }
+
+        public void OnDestroy(ref SystemState state)
+        {
+            
+        }
+
+        public void OnUpdate(ref SystemState state)
+        {
+            int localNetworkId = SystemAPI.GetSingleton<NetworkIdComponent>().Value;
+
+            var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
+            foreach (var (character, owningPlayer, ghostOwner, entity) in SystemAPI.Query<FirstPersonCharacterComponent, OwningPlayer, GhostOwnerComponent>().WithNone<CharacterInBattleTag>().WithEntityAccess())
+            {
+                if (ghostOwner.NetworkId == localNetworkId)
+                {
+                    commandBuffer.AddComponent(character.ViewEntity, new MainEntityCamera()
+                    {
+                        BaseFoV = character.BaseFoV,
+                        CurrentFoV = character.BaseFoV,
+                    });
+                    //Do CrossHair
+                    commandBuffer.AddComponent(entity, new CharacterInBattleTag());
+                    //Disable CharacterRenderer
+                    MiscUtilities.SetShadowModeInHierarchy(state.EntityManager, commandBuffer, entity, SystemAPI.GetBufferLookup<Child>(), UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly);
+                }
+            }
+            commandBuffer.Playback(state.EntityManager);
+        }
+    }
+
+
     public struct BattleStartTag : IComponentData
     {
         
+    }
+    
+    public struct CharacterInBattleTag : IComponentData
+    {
+        
+    }
+    
+    public struct JoinedClient : IComponentData
+    {
+        public Entity PlayerEntity;
     }
 }

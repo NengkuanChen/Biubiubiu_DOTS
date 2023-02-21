@@ -26,6 +26,8 @@ namespace Player
 
         [GhostField] 
         public bool IsReady;
+        
+        public Entity SourceConnection;
     }
     
     

@@ -1,7 +1,7 @@
 ﻿using Unity.Entities;
 using UnityEngine;
 
-namespace DefaultNamespace.Battle.TransformSynchronizer
+namespace Game.Battle.TransformSynchronizer
 {
     public struct TransformSyncComponent : IComponentData
     {

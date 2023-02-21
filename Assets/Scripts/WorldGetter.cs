@@ -1,6 +1,6 @@
 ﻿using Unity.Entities;
 
-namespace DefaultNamespace
+namespace Game
 {
     public static class WorldGetter
     {

@@ -74,7 +74,7 @@ namespace Lobby
                                 TeamID = positionChangeRequest.targetTeamID,
                                 LobbyPositionID = positionChangeRequest.targetPositionID,
                                 PlayerNickname = nickName,
-                                IsReady = false
+                                IsReady = false,
                             });
                             
                             commandBuffer.AddComponent(playerInfoUpdate,

@@ -4,6 +4,7 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Rival;
+using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.NetCode;
 using Unity.Transforms;
@@ -26,16 +27,23 @@ public partial struct CharacterWeaponVisualFeedbackSystem : ISystem
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        CharacterWeaponVisualFeedbackJob job = new CharacterWeaponVisualFeedbackJob
-        {
-            DeltaTime = SystemAPI.Time.DeltaTime,
-            ElapsedTime = (float)SystemAPI.Time.ElapsedTime,
-            WeaponVisualFeedbackLookup = SystemAPI.GetComponentLookup<WeaponVisualFeedback>(true),
-            WeaponControlLookup = SystemAPI.GetComponentLookup<WeaponControl>(true),
-            LocalTransformLookup = SystemAPI.GetComponentLookup<LocalTransform>(false),
-            MainEntityCameraLookup = SystemAPI.GetComponentLookup<MainEntityCamera>(false),
-        };
-        job.Schedule();
+        // CharacterWeaponVisualFeedbackJob job = new CharacterWeaponVisualFeedbackJob
+        // {
+        //     DeltaTime = SystemAPI.Time.DeltaTime,
+        //     ElapsedTime = (float)SystemAPI.Time.ElapsedTime,
+        //     WeaponVisualFeedbackLookup = SystemAPI.GetComponentLookup<WeaponVisualFeedback>(true),
+        //     WeaponControlLookup = SystemAPI.GetComponentLookup<WeaponControl>(true),
+        //     LocalTransformLookup = SystemAPI.GetComponentLookup<LocalTransform>(false),
+        //     MainEntityCameraLookup = SystemAPI.GetComponentLookup<MainEntityCamera>(false),
+        // };
+        // job.Schedule();
+        //
+        // // This is required to ensure that the job is completed before the next frame
+        // // Custom Changes
+        // state.Dependency.Complete();
+        
+        //Temporarily disabled
+        
     }
 
     [BurstCompile]

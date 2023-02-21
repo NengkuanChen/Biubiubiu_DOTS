@@ -1,3 +1,4 @@
+using Game.Battle;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -18,7 +19,7 @@ public partial class FirstPersonPlayerInputsSystem : SystemBase
     protected override void OnCreate()
     {
         RequireForUpdate(SystemAPI.QueryBuilder().WithAll<FirstPersonPlayer, FirstPersonPlayerCommands>().Build());
-        RequireForUpdate<GameResources>();   
+        RequireForUpdate<BattleEntitySpawner>();   
         RequireForUpdate<NetworkTime>();   
         RequireForUpdate<NetworkIdComponent>();   
 
@@ -34,7 +35,7 @@ public partial class FirstPersonPlayerInputsSystem : SystemBase
         float elapsedTime = (float)SystemAPI.Time.ElapsedTime;
         NetworkTick tick = SystemAPI.GetSingleton<NetworkTime>().ServerTick;
         int localNetworkId = SystemAPI.GetSingleton<NetworkIdComponent>().Value;
-        GameResources gameResources = SystemAPI.GetSingleton<GameResources>();
+        BattleEntitySpawner battleEntitySpawner = SystemAPI.GetSingleton<BattleEntitySpawner>();
         FPSInputActions.DefaultMapActions defaultActionsMap = InputActions.DefaultMap;
 
         foreach (var (playerCommands, player, ghostOwner, entity) in SystemAPI.Query<RefRW<FirstPersonPlayerCommands>, RefRW<FirstPersonPlayer>, GhostOwnerComponent>().WithEntityAccess())

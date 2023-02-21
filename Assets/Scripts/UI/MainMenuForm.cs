@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using DefaultNamespace;
+using Game;
 using Lobby;
 using Player;
 using TMPro;

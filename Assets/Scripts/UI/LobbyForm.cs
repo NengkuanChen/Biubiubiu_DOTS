@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using DefaultNamespace;
+using Game;
 using Lobby;
 using Player;
 using Unity.NetCode;

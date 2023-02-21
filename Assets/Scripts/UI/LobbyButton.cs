@@ -1,4 +1,4 @@
-﻿using DefaultNamespace;
+﻿using Game;
 using Lobby;
 using TMPro;
 using Unity.Entities;

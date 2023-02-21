@@ -1,4 +1,4 @@
-﻿using DefaultNamespace.Battle.TransformSynchronizer;
+﻿using Game.Battle.TransformSynchronizer;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;

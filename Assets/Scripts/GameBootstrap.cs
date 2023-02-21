@@ -2,7 +2,7 @@
 using Unity.Entities;
 using Unity.NetCode;
 
-namespace DefaultNamespace
+namespace Game
 {
     [UnityEngine.Scripting.Preserve]
     public class GameBootstrap : ClientServerBootstrap

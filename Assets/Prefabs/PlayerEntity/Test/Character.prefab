@@ -157,6 +157,7 @@ GameObject:
   - component: {fileID: 1555240849038293809}
   - component: {fileID: -1934860693827361932}
   - component: {fileID: -2257928589708603627}
+  - component: {fileID: 5945137456852731377}
   - component: {fileID: 5654653473821561701}
   m_Layer: 0
   m_Name: Character
@@ -361,6 +362,86 @@ MonoBehaviour:
   TrackInterpolationDelay: 0
   GhostGroup: 0
   UsePreSerialization: 0
+--- !u!114 &5945137456852731377
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1555240849038293811}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03c9592a80483fd478e45d176ac83132, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ViewObject: {fileID: 3463604651959167738}
+  NameTagSocket: {fileID: 397833573}
+  WeaponSocket: {fileID: 6371560197271105382}
+  WeaponAnimationSocket: {fileID: 6371560197096954920}
+  DeathVFX: {fileID: 0}
+  DeathVFXSpawnPoint: {fileID: 902680416403865457}
+  CharacterProperties:
+    CustomPhysicsBodyTags:
+      Tag00: 0
+      Tag01: 0
+      Tag02: 0
+      Tag03: 0
+      Tag04: 0
+      Tag05: 0
+      Tag06: 0
+      Tag07: 0
+    InterpolatePosition: 1
+    InterpolateRotation: 0
+    EvaluateGrounding: 1
+    SnapToGround: 1
+    GroundSnappingDistance: 0.5
+    EnhancedGroundPrecision: 0
+    MaxGroundedSlopeAngle: 60
+    DetectMovementCollisions: 1
+    DecollideFromOverlaps: 1
+    ProjectVelocityOnInitialOverlaps: 0
+    MaxContinuousCollisionsIterations: 8
+    MaxOverlapDecollisionIterations: 2
+    DiscardMovementWhenExceedMaxIterations: 1
+    KillVelocityWhenExceedMaxIterations: 1
+    DetectObstructionsForParentBodyMovement: 0
+    SimulateDynamicBody: 1
+    Mass: 1
+  Character:
+    BaseFoV: 75
+    GroundMaxSpeed: 10
+    GroundedMovementSharpness: 15
+    AirAcceleration: 50
+    AirMaxSpeed: 10
+    AirDrag: 0
+    JumpSpeed: 10
+    Gravity:
+      x: -0
+      y: -30
+      z: -0
+    PreventAirAccelerationAgainstUngroundedHits: 1
+    StepAndSlopeHandling:
+      StepHandling: 0
+      MaxStepHeight: 0.5
+      ExtraStepChecksDistance: 0.1
+      CharacterWidthForStepGroundingCheck: 1
+      PreventGroundingWhenMovingTowardsNoGrounding: 1
+      HasMaxDownwardSlopeChangeAngle: 0
+      MaxDownwardSlopeChangeAngle: 90
+      ConstrainVelocityToGroundPlane: 1
+    MinViewAngle: -90
+    MaxViewAngle: 90
+    ViewRollAmount: 0
+    ViewRollSharpness: 0
+    CharacterYDegrees: 0
+    ViewPitchDegrees: 0
+    ViewLocalRotation:
+      value:
+        x: 0
+        y: 0
+        z: 0
+        w: 0
+    ViewRollDegrees: 0
 --- !u!114 &5654653473821561701
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -398,6 +479,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6401532902016766949}
+  - component: {fileID: 3811137463063190257}
   m_Layer: 0
   m_Name: View
   m_TagString: Untagged
@@ -421,6 +503,19 @@ Transform:
   m_Father: {fileID: 1555240849038293810}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3811137463063190257
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3463604651959167738}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f3ddd2cb094880b40a1612adcf67e9a2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Character: {fileID: 1555240849038293811}
 --- !u!1 &6371560197096954920
 GameObject:
   m_ObjectHideFlags: 0
