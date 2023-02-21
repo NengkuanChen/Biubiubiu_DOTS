@@ -1,0 +1,16 @@
+{
+  "name": "com.rk.rukhanka",
+  "version": "1.0.0-pre.15",
+  "displayName": "Rukhanka Animation System",
+  "description": "ECS Animation System",
+  "unity": "2022.2",
+  "unityRelease": "0f1",
+  "dependencies": {
+    "com.unity.entities.graphics": "1.0.0-pre.15"
+  },
+  "author": {
+    "name": "Rukhanka",
+    "email": "support@rukhanka.com",
+    "url": "https://docs.rukhanka.com"
+  }
+}

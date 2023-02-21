@@ -1,4 +1,5 @@
 ﻿using Battle;
+using Battle.GameEntitySpawner;
 using Battle.TransformSynchronizer;
 using Lobby;
 using UI;
@@ -24,6 +25,7 @@ namespace DefaultNamespace.Battle
             var builder = new EntityQueryBuilder(Allocator.Temp).WithAny<ServerReadyToStartTag, ClientReadyToStartTag>();
             state.RequireForUpdate(state.GetEntityQuery(builder));
             networkIdFromEntity = state.GetComponentLookup<NetworkIdComponent>(true);
+            state.RequireForUpdate<GameEntitySpawnerComponent>();
         }
 
         public void OnDestroy(ref SystemState state)
@@ -72,25 +74,7 @@ namespace DefaultNamespace.Battle
             //Test
             foreach (var (networkID, entity) in SystemAPI.Query<RefRO<NetworkIdComponent>>().WithEntityAccess())
             {
-                // var playerGameObjectSpawner =
-                //     PlayerGameObjectSpawner.Singleton.SpawnServerPlayerGameObject(Vector3.zero, quaternion.identity);
-                // var uniqueId = playerGameObjectSpawner.UniqueId;
-                // var syncEntityPrefab = SystemAPI.GetSingleton<PlayerSpawner>().playerPrefab;
-                // var syncEntity = commandBuffer.Instantiate(syncEntityPrefab);
-                // commandBuffer.AddComponent(syncEntity, new TransformSyncEntityInitializeComponent {UniqueId = uniqueId});
-                // commandBuffer.AddComponent<EntitySyncFromGameObjectTag>(syncEntity);
-                // commandBuffer.AddComponent(entity, new NetworkStreamInGame());
-                // commandBuffer.SetComponent(syncEntity, new GhostOwnerComponent { NetworkId = networkID.ValueRO.Value});
-                
-                var playerPrefab = SystemAPI.GetSingleton<PlayerSpawner>().playerPrefab;
-                var player = commandBuffer.Instantiate(playerPrefab);
-                commandBuffer.AddComponent(entity, new NetworkStreamInGame());
-                commandBuffer.AddComponent(entity, new GhostPresentationGameObjectPrefab
-                {
-                    Server = PlayerGameObjectSpawner.Singleton.ServerGameObjectPrefab,
-                    Client = PlayerGameObjectSpawner.Singleton.ClientGameObjectPrefab
-                });
-                commandBuffer.SetComponent(player, new GhostOwnerComponent { NetworkId = networkID.ValueRO.Value});
+                Cursor.lockState = CursorLockMode.Locked;
             }
             
             
@@ -131,7 +115,7 @@ namespace DefaultNamespace.Battle
         {
             UIManager.Singleton.CloseForm<LoadingForm>();
             commandBuffer.AddComponent(SystemAPI.GetSingletonEntity<NetworkIdComponent>(), new NetworkStreamInGame());
-            
+            Cursor.lockState = CursorLockMode.Locked;
         }
     }
     
