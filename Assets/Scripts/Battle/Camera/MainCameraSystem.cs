@@ -21,3 +21,20 @@ public partial class MainCameraSystem : SystemBase
         }
     }
 }
+
+[UpdateInGroup(typeof(PresentationSystemGroup))]
+public partial class ViewModelCameraSystem : SystemBase
+{
+    protected override void OnUpdate()
+    {
+        if (Battle.Camera.ViewModelCamera.Instance != null && SystemAPI.HasSingleton<ViewModelCamera>())
+        {
+            Entity viewModelCameraEntity = SystemAPI.GetSingletonEntity<ViewModelCamera>();
+            ViewModelCamera viewModelCamera = SystemAPI.GetSingleton<ViewModelCamera>();
+            LocalToWorld targetLocalToWorld = SystemAPI.GetComponent<LocalToWorld>(viewModelCameraEntity);
+            
+            Battle.Camera.ViewModelCamera.Instance.transform.SetPositionAndRotation(targetLocalToWorld.Position, targetLocalToWorld.Rotation);
+            Battle.Camera.ViewModelCamera.Instance.fieldOfView = viewModelCamera.CurrentFoV;
+        }
+    }
+}

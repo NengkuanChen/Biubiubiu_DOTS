@@ -1,5 +1,6 @@
 ﻿using Battle;
 using Battle.CharacterSpawn;
+using Battle.ViewModel;
 using Lobby;
 using Player;
 using UI;
@@ -179,10 +180,23 @@ namespace Game.Battle
                         BaseFoV = character.BaseFoV,
                         CurrentFoV = character.BaseFoV,
                     });
+                    
+                    commandBuffer.AddComponent(character.ViewEntity, new ViewModelCamera()
+                    {
+                        BaseFoV = character.BaseFoV,
+                        CurrentFoV = character.BaseFoV,
+                    });
+                    
                     //Do CrossHair
                     commandBuffer.AddComponent(entity, new CharacterInBattleTag());
                     //Disable CharacterRenderer
                     MiscUtilities.SetShadowModeInHierarchy(state.EntityManager, commandBuffer, entity, SystemAPI.GetBufferLookup<Child>(), UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly);
+                    
+                    //Spawn ViewModel;
+                    if (ViewModelManager.Instance != null)
+                    {
+                        ViewModelManager.Instance.InstantiateViewModel();
+                    }
                 }
             }
             commandBuffer.Playback(state.EntityManager);
