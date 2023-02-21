@@ -12,6 +12,7 @@ public struct FirstPersonCharacterComponent : IComponentData
 {
     public float BaseFoV;
     public float GroundMaxSpeed;
+    public float SprintSpeedMultiplier;
     public float GroundedMovementSharpness;
     public float AirAcceleration;
     public float AirMaxSpeed;
@@ -49,6 +50,7 @@ public struct FirstPersonCharacterComponent : IComponentData
         {
             BaseFoV = 75f,
             GroundMaxSpeed = 10f,
+            SprintSpeedMultiplier = 1.5f,
             GroundedMovementSharpness = 15f,
             AirAcceleration = 50f,
             AirMaxSpeed = 10f,
@@ -71,6 +73,8 @@ public struct FirstPersonCharacterControl : IComponentData
     public float3 MoveVector;
     public float2 LookYawPitchDegrees;
     public bool Jump;
+    public bool Crouch;
+    public bool Sprint;
 }
 
 [Serializable]

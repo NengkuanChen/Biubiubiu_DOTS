@@ -409,12 +409,13 @@ MonoBehaviour:
     Mass: 1
   Character:
     BaseFoV: 75
-    GroundMaxSpeed: 10
+    GroundMaxSpeed: 3
+    SprintSpeedMultiplier: 2
     GroundedMovementSharpness: 15
     AirAcceleration: 50
-    AirMaxSpeed: 10
+    AirMaxSpeed: 3
     AirDrag: 0
-    JumpSpeed: 10
+    JumpSpeed: 7
     Gravity:
       x: -0
       y: -30

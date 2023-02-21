@@ -191,9 +191,15 @@ public partial struct FirstPersonPlayerFixedStepControlSystem : ISystem
                 float3 characterRight = math.mul(characterRotation, math.right());
                 characterControl.MoveVector = (playerCommands.MoveInput.y * characterForward) + (playerCommands.MoveInput.x * characterRight);
                 characterControl.MoveVector = MathUtilities.ClampToMaxLength(characterControl.MoveVector, 1f);
-
+                
                 // Jump
                 characterControl.Jump = playerCommands.JumpPressed.IsSet;
+                
+                // Sprint
+                characterControl.Sprint = playerCommands.SprintHeld;
+                
+                // Crouch
+                characterControl.Crouch = playerCommands.CrouchHeld;
 
                 SystemAPI.SetComponent(player.ControlledCharacter, characterControl);
             }

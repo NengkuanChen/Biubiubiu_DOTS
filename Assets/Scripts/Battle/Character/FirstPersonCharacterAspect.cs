@@ -77,6 +77,14 @@ public readonly partial struct FirstPersonCharacterAspect : IAspect, IKinematicC
         {
             // Move on ground
             float3 targetVelocity = characterControl.MoveVector * characterComponent.GroundMaxSpeed;
+            
+            //Sprint
+            if (characterControl.Sprint)
+            {
+                targetVelocity *= characterComponent.SprintSpeedMultiplier;
+            }
+            
+            
             CharacterControlUtilities.StandardGroundMove_Interpolated(ref characterBody.RelativeVelocity, targetVelocity, characterComponent.GroundedMovementSharpness, deltaTime, characterBody.GroundingUp, characterBody.GroundHit.Normal);
 
             // Jump
@@ -84,6 +92,9 @@ public readonly partial struct FirstPersonCharacterAspect : IAspect, IKinematicC
             {
                 CharacterControlUtilities.StandardJump(ref characterBody, characterBody.GroundingUp * characterComponent.JumpSpeed, true, characterBody.GroundingUp);
             }
+            
+            
+            
         }
         else
         {
