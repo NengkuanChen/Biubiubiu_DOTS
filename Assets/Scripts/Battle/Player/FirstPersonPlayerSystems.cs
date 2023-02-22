@@ -196,7 +196,7 @@ public partial struct FirstPersonPlayerFixedStepControlSystem : ISystem
                 characterControl.Jump = playerCommands.JumpPressed.IsSet;
                 
                 // Sprint
-                characterControl.Sprint = playerCommands.SprintHeld;
+                characterControl.Sprint = playerCommands.SprintHeld && playerCommands.MoveInput.y > 0f;
                 
                 // Crouch
                 characterControl.Crouch = playerCommands.CrouchHeld;

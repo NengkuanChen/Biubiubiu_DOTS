@@ -72,11 +72,16 @@ public readonly partial struct FirstPersonCharacterAspect : IAspect, IKinematicC
         ref KinematicCharacterBody characterBody = ref CharacterAspect.CharacterBody.ValueRW;
         ref FirstPersonCharacterComponent characterComponent = ref CharacterComponent.ValueRW;
         ref FirstPersonCharacterControl characterControl = ref CharacterControl.ValueRW;
+        ref LocalTransform characterTransform = ref CharacterAspect.LocalTransform.ValueRW;
         
         if (characterBody.IsGrounded)
         {
             // Move on ground
             float3 targetVelocity = characterControl.MoveVector * characterComponent.GroundMaxSpeed;
+            
+            // Is moving forward
+            var charForwardVector = characterTransform.Forward();
+            
             
             //Sprint
             if (characterControl.Sprint)

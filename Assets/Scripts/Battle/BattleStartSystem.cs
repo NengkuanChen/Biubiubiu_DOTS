@@ -1,4 +1,5 @@
-﻿using Battle;
+﻿using System.Collections.Generic;
+using Battle;
 using Battle.CharacterSpawn;
 using Battle.ViewModel;
 using Lobby;
@@ -74,6 +75,15 @@ namespace Game.Battle
             UIManager.Singleton.CloseForm<LoadingForm>();
             Debug.Log("Server: GameStart");
             
+            NativeArray<float3> testSpawnPositions = new NativeArray<float3>(new float3[]
+            {
+                new float3(0, 0, 0),
+                new float3(1, 0, 1),
+                new float3(-1, 0, -1),
+                new float3(2, 0, 2),
+            }, Allocator.Temp);
+            var spawnPositionIndex = 0;
+
             //Spawn Player For Each PlayerIdentity
             foreach (var (playerIdentity, playerIdentityEntity) in SystemAPI.Query<PlayerIdentity>().WithEntityAccess())
             {
@@ -89,11 +99,13 @@ namespace Game.Battle
                 commandBuffer.AddComponent(spawnCharacterRequest, new CharacterSpawnRequest
                 {
                     ForConnection = playerIdentity.SourceConnection,
-                    SpawnPosition = new float3(0, 0, 0),
+                    SpawnPosition = testSpawnPositions[spawnPositionIndex++],
                     ForPlayer = playerEntity,
                     PlayerIdentity = playerIdentityEntity
                 });
             }
+            
+            testSpawnPositions.Dispose();
             
             //Test
             // foreach (var (networkID, entity) in SystemAPI.Query<RefRO<NetworkIdComponent>>().WithEntityAccess())
