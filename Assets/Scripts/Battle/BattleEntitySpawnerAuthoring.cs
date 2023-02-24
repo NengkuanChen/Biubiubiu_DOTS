@@ -7,12 +7,14 @@ namespace Game.Battle
     {
         public Entity PlayerGhost;
         public Entity TestCharacterGhost;
+        public Entity TestGunGhost;
     }
     
     public class BattleEntitySpawnerAuthoring: MonoBehaviour
     {
         public GameObject playerGhostPrefab;
         public GameObject TestCharacterGhost;
+        public GameObject TestGunGhost;
         
         public class BattleEntitySpawnerAuthoringBaker : Baker<BattleEntitySpawnerAuthoring>
         {
@@ -21,6 +23,7 @@ namespace Game.Battle
                 BattleEntitySpawner component = default(BattleEntitySpawner);
                 component.PlayerGhost = GetEntity(authoring.playerGhostPrefab);
                 component.TestCharacterGhost = GetEntity(authoring.TestCharacterGhost);
+                component.TestGunGhost = GetEntity(authoring.TestGunGhost);
                 AddComponent(component);
                 
             }

@@ -18,21 +18,21 @@ public struct FirstPersonCharacterUpdateContext
 {
     // Here, you may add additional global data for your character updates, such as ComponentLookups, Singletons, NativeCollections, etc...
     // The data you add here will be accessible in your character updates and all of your character "callbacks".
-    [ReadOnly]
-    public ComponentLookup<WeaponVisualFeedback> WeaponVisualFeedbackLookup;
-    [ReadOnly]
-    public ComponentLookup<WeaponControl> WeaponControlLookup;
+    // [ReadOnly]
+    // public ComponentLookup<WeaponVisualFeedback> WeaponVisualFeedbackLookup;
+    // [ReadOnly]
+    // public ComponentLookup<WeaponControl> WeaponControlLookup;
 
     public void OnSystemCreate(ref SystemState state)
     {
-        WeaponVisualFeedbackLookup = state.GetComponentLookup<WeaponVisualFeedback>(true);
-        WeaponControlLookup = state.GetComponentLookup<WeaponControl>(true);
+        // WeaponVisualFeedbackLookup = state.GetComponentLookup<WeaponVisualFeedback>(true);
+        // WeaponControlLookup = state.GetComponentLookup<WeaponControl>(true);
     }
 
     public void OnSystemUpdate(ref SystemState state)
     {
-        WeaponVisualFeedbackLookup.Update(ref state);
-        WeaponControlLookup.Update(ref state);
+        // WeaponVisualFeedbackLookup.Update(ref state);
+        // WeaponControlLookup.Update(ref state);
     }
 }
 
@@ -41,7 +41,7 @@ public readonly partial struct FirstPersonCharacterAspect : IAspect, IKinematicC
     public readonly KinematicCharacterAspect CharacterAspect;
     public readonly RefRW<FirstPersonCharacterComponent> CharacterComponent;
     public readonly RefRW<FirstPersonCharacterControl> CharacterControl;
-    public readonly RefRW<ActiveWeapon> ActiveWeapon;
+    // public readonly RefRW<ActiveWeapon> ActiveWeapon;
 
     public void PhysicsUpdate(ref FirstPersonCharacterUpdateContext context, ref KinematicCharacterUpdateContext baseContext)
     {
@@ -131,7 +131,7 @@ public readonly partial struct FirstPersonCharacterAspect : IAspect, IKinematicC
         ref FirstPersonCharacterComponent characterComponent = ref CharacterComponent.ValueRW;
         ref quaternion characterRotation = ref CharacterAspect.LocalTransform.ValueRW.Rotation;
         FirstPersonCharacterControl characterControl = CharacterControl.ValueRO;
-        ActiveWeapon activeWeapon = ActiveWeapon.ValueRO;
+        // ActiveWeapon activeWeapon = ActiveWeapon.ValueRO;
 
         // Add rotation from parent body to the character rotation
         // (this is for allowing a rotating moving platform to rotate your character as well, and handle interpolation properly)
@@ -149,17 +149,17 @@ public readonly partial struct FirstPersonCharacterAspect : IAspect, IKinematicC
             characterComponent.ViewRollDegrees = math.lerp(characterComponent.ViewRollDegrees, targetTiltAngle, math.saturate(characterComponent.ViewRollSharpness * baseContext.Time.DeltaTime));
         }
         
-        // Handle aiming look sensitivity
-        if (context.WeaponControlLookup.TryGetComponent(activeWeapon.Entity, out WeaponControl weaponControl))
-        {
-            if (weaponControl.AimHeld)
-            {
-                if (context.WeaponVisualFeedbackLookup.TryGetComponent(activeWeapon.Entity, out WeaponVisualFeedback weaponFeedback))
-                {
-                    characterControl.LookYawPitchDegrees *= weaponFeedback.LookSensitivityMultiplierWhileAiming;
-                }
-            }
-        }
+        // // Handle aiming look sensitivity
+        // if (context.WeaponControlLookup.TryGetComponent(activeWeapon.Entity, out WeaponControl weaponControl))
+        // {
+        //     if (weaponControl.AimHeld)
+        //     {
+        //         if (context.WeaponVisualFeedbackLookup.TryGetComponent(activeWeapon.Entity, out WeaponVisualFeedback weaponFeedback))
+        //         {
+        //             characterControl.LookYawPitchDegrees *= weaponFeedback.LookSensitivityMultiplierWhileAiming;
+        //         }
+        //     }
+        // }
         
         // Compute character & view rotations from rotation input
         FirstPersonCharacterUtilities.ComputeFinalRotationsFromRotationDelta(

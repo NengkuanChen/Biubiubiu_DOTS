@@ -48,3 +48,5 @@ MonoBehaviour:
     type: 3}
   TestCharacterGhost: {fileID: 1555240849038293811, guid: e95be3f6ef9cc8243994bdcda968a0e5,
     type: 3}
+  TestGunGhost: {fileID: 3276825593709502202, guid: ccca9d5e2d42acd4f8bfb6967204c2f8,
+    type: 3}

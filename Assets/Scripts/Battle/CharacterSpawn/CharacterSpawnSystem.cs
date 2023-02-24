@@ -1,4 +1,5 @@
-﻿using Game.Battle;
+﻿using Battle.Weapon;
+using Game.Battle;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -43,6 +44,7 @@ namespace Battle.CharacterSpawn
                 FirstPersonPlayer player = SystemAPI.GetComponent<FirstPersonPlayer>(spawnRequest.ValueRO.ForPlayer);
                 player.ControlledCharacter = characterGhost;
                 commandBuffer.SetComponent(spawnRequest.ValueRO.ForPlayer, player);
+                commandBuffer.AddComponent(characterGhost, new CharacterActiveWeaponComponent());
                 commandBuffer.DestroyEntity(entity);
             }
             

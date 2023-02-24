@@ -1,3 +1,4 @@
+using Battle.Weapon;
 using Game.Battle;
 using Unity.Burst;
 using Unity.Collections;
@@ -205,28 +206,51 @@ public partial struct FirstPersonPlayerFixedStepControlSystem : ISystem
             }
 
             // Weapon
-            if (SystemAPI.HasComponent<ActiveWeapon>(player.ControlledCharacter))
+            if (SystemAPI.HasComponent<ActiveWeaponComponent>(player.ControlledCharacter))
             {
-                ActiveWeapon activeWeapon = SystemAPI.GetComponent<ActiveWeapon>(player.ControlledCharacter);
-                if (SystemAPI.HasComponent<WeaponControl>(activeWeapon.Entity))
+                ActiveWeaponComponent activeWeapon = SystemAPI.GetComponent<ActiveWeaponComponent>(player.ControlledCharacter);
+                if (SystemAPI.HasComponent<WeaponControlComponent>(activeWeapon.WeaponEntity))
                 {
-                    WeaponControl weaponControl = SystemAPI.GetComponent<WeaponControl>(activeWeapon.Entity);
-                    InterpolationDelay interpolationDelay = SystemAPI.GetComponent<InterpolationDelay>(activeWeapon.Entity);
-
-                    // Shoot
+                    WeaponControlComponent weaponControl = SystemAPI.GetComponent<WeaponControlComponent>(activeWeapon.WeaponEntity);
+                    
                     weaponControl.FirePressed = playerCommands.ShootPressed.IsSet;
                     weaponControl.FireReleased = playerCommands.ShootReleased.IsSet;
-
-                    // Aim
                     weaponControl.AimHeld = playerCommands.AimHeld;
-
-                    // Interp delay
+                    weaponControl.ReloadPressed = playerCommands.ReloadPressed.IsSet;
+                    
+                    InterpolationDelay interpolationDelay = SystemAPI.GetComponent<InterpolationDelay>(activeWeapon.WeaponEntity);
                     interpolationDelay.Value = commandInterpolationDelay.Delay;
-
-                    SystemAPI.SetComponent(activeWeapon.Entity, weaponControl);
-                    SystemAPI.SetComponent(activeWeapon.Entity, interpolationDelay);
+                    
+                    
+                    SystemAPI.SetComponent(activeWeapon.WeaponEntity, weaponControl);
+                    SystemAPI.SetComponent(activeWeapon.WeaponEntity, interpolationDelay);
+                    
                 }
             }
+            
+            
+            // if (SystemAPI.HasComponent<ActiveWeapon>(player.ControlledCharacter))
+            // {
+            //     ActiveWeapon activeWeapon = SystemAPI.GetComponent<ActiveWeapon>(player.ControlledCharacter);
+            //     if (SystemAPI.HasComponent<WeaponControl>(activeWeapon.Entity))
+            //     {
+            //         WeaponControl weaponControl = SystemAPI.GetComponent<WeaponControl>(activeWeapon.Entity);
+            //         InterpolationDelay interpolationDelay = SystemAPI.GetComponent<InterpolationDelay>(activeWeapon.Entity);
+            //
+            //         // Shoot
+            //         weaponControl.FirePressed = playerCommands.ShootPressed.IsSet;
+            //         weaponControl.FireReleased = playerCommands.ShootReleased.IsSet;
+            //
+            //         // Aim
+            //         weaponControl.AimHeld = playerCommands.AimHeld;
+            //
+            //         // Interp delay
+            //         interpolationDelay.Value = commandInterpolationDelay.Delay;
+            //
+            //         SystemAPI.SetComponent(activeWeapon.Entity, weaponControl);
+            //         SystemAPI.SetComponent(activeWeapon.Entity, interpolationDelay);
+            //     }
+            // }
         }
     }
 }

@@ -5,6 +5,7 @@ using UnityEngine;
 using Rival;
 using Unity.Physics;
 using System.Collections.Generic;
+using Battle.Weapon;
 using UnityEngine.Serialization;
 
 [DisallowMultipleComponent]
@@ -36,8 +37,9 @@ public class FirstPersonCharacterAuthoring : MonoBehaviour
             AddComponent(authoring.Character);
             AddComponent(new FirstPersonCharacterControl());
             AddComponent(new OwningPlayer());
-            AddComponent(new ActiveWeapon());
-            AddComponent(new CharacterWeaponVisualFeedback());
+            
+            
+            AddComponent(new ActiveWeaponComponent());
         }
     }
 }

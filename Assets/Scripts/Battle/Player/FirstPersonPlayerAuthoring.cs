@@ -5,6 +5,7 @@ using Unity.Entities;
 public class FirstPersonPlayerAuthoring : MonoBehaviour
 {
     public GameObject ControlledCharacter;
+    
 
     public class Baker : Baker<FirstPersonPlayerAuthoring>
     {
@@ -15,6 +16,7 @@ public class FirstPersonPlayerAuthoring : MonoBehaviour
                 ControlledCharacter = GetEntity(authoring.ControlledCharacter),
             });
             AddComponent<FirstPersonPlayerCommands>();
+            
         }
     }
 }

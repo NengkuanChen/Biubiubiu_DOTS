@@ -1,0 +1,153 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d803417fe874ff289162c88d30a105f, type: 3}
+  m_Name: RecoilConfig
+  m_EditorClassIdentifier: 
+  recoilTypes:
+  - MaxVerticalAngleOffset: 30
+    MaxHorizontalAngleOffset: 20
+    VerticalRecoilCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 3.1270816
+        outSlope: 3.1270816
+        tangentMode: 34
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.15486255
+        value: 0.48426783
+        inSlope: 1.3298968
+        outSlope: 1.3298968
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.40779287
+      - serializedVersion: 3
+        time: 0.468939
+        value: 0.7549989
+        inSlope: 0.1147607
+        outSlope: 0.1147607
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.20569861
+      - serializedVersion: 3
+        time: 0.7606321
+        value: 0.94264114
+        inSlope: 0.19605614
+        outSlope: 0.19605614
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.3968618
+      - serializedVersion: 3
+        time: 0.8783808
+        value: 0.9750334
+        inSlope: 0.25323817
+        outSlope: 0.25323817
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0.20528495
+        outSlope: 0.20528495
+        tangentMode: 34
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    HorizontalRecoilCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: -0.8841428
+        outSlope: -0.8841428
+        tangentMode: 34
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.20276062
+        value: -0.17926934
+        inSlope: 0.46524718
+        outSlope: 0.46524718
+        tangentMode: 34
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.451502
+        value: 0.272106
+        inSlope: 0.06672521
+        outSlope: 0.06672521
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.27336967
+      - serializedVersion: 3
+        time: 0.70100623
+        value: -0.78536
+        inSlope: 0.24048933
+        outSlope: 0.24048933
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.47996745
+      - serializedVersion: 3
+        time: 0.99999917
+        value: 0.9915168
+        inSlope: 5.942872
+        outSlope: 5.942872
+        tangentMode: 34
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    MaxRecoveryTime: 2
+    RecoveryCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 2
+        outSlope: 2
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4

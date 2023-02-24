@@ -20,20 +20,20 @@ namespace Battle.ViewModel
         }
 
 
-        public void InstantiateViewModel()
-        {
-            if (BattleGameObjectSpawner.Instance == null)
-            {
-                return;
-            }
-
-            if (currentViewModel != null)
-            {
-                Destroy(currentViewModel.gameObject);
-            }
-
-            currentViewModel = Instantiate(BattleGameObjectSpawner.Instance.ViewModelPrefab);
-        }
+        // public void InstantiateViewModel()
+        // {
+        //     if (BattleGameObjectSpawner.Instance == null)
+        //     {
+        //         return;
+        //     }
+        //
+        //     if (currentViewModel != null)
+        //     {
+        //         Destroy(currentViewModel.gameObject);
+        //     }
+        //
+        //     currentViewModel = Instantiate(BattleGameObjectSpawner.Instance.ViewModelPrefab);
+        // }
     }
     
     

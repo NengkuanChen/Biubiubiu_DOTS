@@ -2,6 +2,7 @@
 using Battle;
 using Battle.CharacterSpawn;
 using Battle.ViewModel;
+using Battle.Weapon;
 using Lobby;
 using Player;
 using UI;
@@ -93,28 +94,47 @@ namespace Game.Battle
                 {
                     NetworkId = networkId.Value
                 });
-                // commandBuffer.AppendToBuffer(playerEntity, );
-            
-                var spawnCharacterRequest = commandBuffer.CreateEntity();
-                commandBuffer.AddComponent(spawnCharacterRequest, new CharacterSpawnRequest
+                
+                var character = commandBuffer.Instantiate(battleEntitySpawner.TestCharacterGhost);
+                
+                commandBuffer.SetComponent(character, new OwningPlayer{ Entity = playerEntity});
+
+                var playerComponent = SystemAPI.GetComponent<FirstPersonPlayer>(character);
+                playerComponent.ControlledCharacter = character;
+                commandBuffer.SetComponent(playerEntity, playerComponent);
+                commandBuffer.SetComponent(character, new LocalTransform
                 {
-                    ForConnection = playerIdentity.SourceConnection,
-                    SpawnPosition = testSpawnPositions[spawnPositionIndex++],
-                    ForPlayer = playerEntity,
-                    PlayerIdentity = playerIdentityEntity
+                    Position = testSpawnPositions[spawnPositionIndex++],
+                    Rotation = quaternion.identity
                 });
+                
+                
+                
+                commandBuffer.SetComponent(character, new GhostOwnerComponent
+                {
+                    NetworkId = networkId.Value
+                });
+
+                // var spawnCharacterRequest = commandBuffer.CreateEntity();
+                // commandBuffer.AddComponent(spawnCharacterRequest, new CharacterSpawnRequest
+                // {
+                //     ForConnection = playerIdentity.SourceConnection,
+                //     SpawnPosition = testSpawnPositions[spawnPositionIndex++],
+                //     ForPlayer = playerEntity,
+                //     PlayerIdentity = playerIdentityEntity
+                // });
+                // var weaponRequest = commandBuffer.CreateEntity();
+                // commandBuffer.AddComponent(weaponRequest, new SetUpWeaponRequestComponent
+                // {
+                //     ForPlayer = playerEntity,
+                //     ForConnection = playerIdentity.SourceConnection,
+                //     WeaponEntity = battleEntitySpawner.TestGunGhost
+                // });
+                
             }
             
             testSpawnPositions.Dispose();
-            
-            //Test
-            // foreach (var (networkID, entity) in SystemAPI.Query<RefRO<NetworkIdComponent>>().WithEntityAccess())
-            // {
-            //     Cursor.lockState = CursorLockMode.Locked;
-            // }
             Cursor.lockState = CursorLockMode.Locked;
-            
-            
         }
     }
     
@@ -199,16 +219,20 @@ namespace Game.Battle
                         CurrentFoV = character.BaseFoV,
                     });
                     
-                    //Do CrossHair
+                    //Do CrossHair Here
+                    //.....
+                    
                     commandBuffer.AddComponent(entity, new CharacterInBattleTag());
                     //Disable CharacterRenderer
                     MiscUtilities.SetShadowModeInHierarchy(state.EntityManager, commandBuffer, entity, SystemAPI.GetBufferLookup<Child>(), UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly);
                     
-                    //Spawn ViewModel;
-                    if (ViewModelManager.Instance != null)
-                    {
-                        ViewModelManager.Instance.InstantiateViewModel();
-                    }
+                    // //Spawn ViewModel;
+                    // if (ViewModelManager.Instance != null)
+                    // {
+                    //     ViewModelManager.Instance.InstantiateViewModel();
+                    // }
+                    
+                    
                 }
             }
             commandBuffer.Playback(state.EntityManager);

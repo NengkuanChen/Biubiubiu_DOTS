@@ -7,10 +7,10 @@ namespace Battle
     {
         public static BattleGameObjectSpawner Instance;
 
-        [SerializeField] 
-        private PlayerViewModel viewModelPrefab;
-        
-        public PlayerViewModel ViewModelPrefab => viewModelPrefab;
+        // [SerializeField] 
+        // private PlayerViewModel viewModelPrefab;
+        //
+        // public PlayerViewModel ViewModelPrefab => viewModelPrefab;
         
         
         private void Awake()
