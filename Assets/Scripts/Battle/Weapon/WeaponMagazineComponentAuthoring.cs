@@ -25,6 +25,11 @@ namespace Battle.Weapon
                     MagazineRestBullet = authoring.MagazineSize,
                     ReloadTime = authoring.ReloadTime
                 });
+                AddComponent(new WeaponReloadComponent
+                {
+                    IsReloading = false,
+                    ReloadTimeLeft = 0f
+                });
             }
         }
     }
@@ -32,5 +37,6 @@ namespace Battle.Weapon
     public struct WeaponReloadComponent : IComponentData
     {
         public float ReloadTimeLeft;
+        public bool IsReloading;
     }
 }

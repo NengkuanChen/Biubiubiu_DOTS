@@ -47,11 +47,6 @@ namespace Battle.CharacterSpawn
                 var weaponEntity = commandBuffer.Instantiate(entitySpawner.TestGunGhost);
 
 
-                // commandBuffer.AddComponent(weaponEntity, new WeaponOwnerComponent
-                // {
-                //     OwnerPlayer = spawnRequest.ValueRO.ForPlayer,
-                //     OwnerCharacter = characterGhost
-                // });
                 //
                 
                 commandBuffer.AddComponent(characterGhost, new ActiveWeaponComponent

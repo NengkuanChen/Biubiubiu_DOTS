@@ -31,6 +31,7 @@ namespace Battle.Weapon
                     MuzzleSocket = GetEntity(authoring.MuzzleSocket),
                 });
                 AddComponent(new WeaponControlComponent());
+                AddComponent(new WeaponFiringComponent());
             }
         }
     }
