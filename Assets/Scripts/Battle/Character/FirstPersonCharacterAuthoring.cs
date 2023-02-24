@@ -38,7 +38,6 @@ public class FirstPersonCharacterAuthoring : MonoBehaviour
             AddComponent(new FirstPersonCharacterControl());
             AddComponent(new OwningPlayer());
             
-            
             AddComponent(new ActiveWeaponComponent());
         }
     }

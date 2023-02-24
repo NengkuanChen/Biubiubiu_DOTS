@@ -94,35 +94,16 @@ namespace Game.Battle
                 {
                     NetworkId = networkId.Value
                 });
-                
-                var character = commandBuffer.Instantiate(battleEntitySpawner.TestCharacterGhost);
-                
-                commandBuffer.SetComponent(character, new OwningPlayer{ Entity = playerEntity});
 
-                var playerComponent = SystemAPI.GetComponent<FirstPersonPlayer>(character);
-                playerComponent.ControlledCharacter = character;
-                commandBuffer.SetComponent(playerEntity, playerComponent);
-                commandBuffer.SetComponent(character, new LocalTransform
-                {
-                    Position = testSpawnPositions[spawnPositionIndex++],
-                    Rotation = quaternion.identity
-                });
-                
-                
-                
-                commandBuffer.SetComponent(character, new GhostOwnerComponent
-                {
-                    NetworkId = networkId.Value
-                });
 
-                // var spawnCharacterRequest = commandBuffer.CreateEntity();
-                // commandBuffer.AddComponent(spawnCharacterRequest, new CharacterSpawnRequest
-                // {
-                //     ForConnection = playerIdentity.SourceConnection,
-                //     SpawnPosition = testSpawnPositions[spawnPositionIndex++],
-                //     ForPlayer = playerEntity,
-                //     PlayerIdentity = playerIdentityEntity
-                // });
+                var spawnCharacterRequest = commandBuffer.CreateEntity();
+                commandBuffer.AddComponent(spawnCharacterRequest, new CharacterSpawnRequest
+                {
+                    ForConnection = playerIdentity.SourceConnection,
+                    SpawnPosition = testSpawnPositions[spawnPositionIndex++],
+                    ForPlayer = playerEntity,
+                    PlayerIdentity = playerIdentityEntity
+                });
                 // var weaponRequest = commandBuffer.CreateEntity();
                 // commandBuffer.AddComponent(weaponRequest, new SetUpWeaponRequestComponent
                 // {

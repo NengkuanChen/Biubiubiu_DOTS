@@ -35,17 +35,39 @@ namespace Battle.CharacterSpawn
                 commandBuffer.SetComponent(characterGhost,
                     LocalTransform.FromPosition(spawnRequest.ValueRO.SpawnPosition));
                 commandBuffer.SetComponent(characterGhost, new OwningPlayer{ Entity = spawnRequest.ValueRO.ForPlayer});
-                commandBuffer.SetComponent(characterGhost, new GhostOwnerComponent
-                {
-                    NetworkId = connectionId
-                });
+                
                 
                 //assign character to player
                 FirstPersonPlayer player = SystemAPI.GetComponent<FirstPersonPlayer>(spawnRequest.ValueRO.ForPlayer);
                 player.ControlledCharacter = characterGhost;
                 commandBuffer.SetComponent(spawnRequest.ValueRO.ForPlayer, player);
-                commandBuffer.AddComponent(characterGhost, new CharacterActiveWeaponComponent());
                 commandBuffer.DestroyEntity(entity);
+                
+                //Spawn weapon
+                var weaponEntity = commandBuffer.Instantiate(entitySpawner.TestGunGhost);
+
+
+                // commandBuffer.AddComponent(weaponEntity, new WeaponOwnerComponent
+                // {
+                //     OwnerPlayer = spawnRequest.ValueRO.ForPlayer,
+                //     OwnerCharacter = characterGhost
+                // });
+                //
+                
+                commandBuffer.AddComponent(characterGhost, new ActiveWeaponComponent
+                {
+                    WeaponEntity = weaponEntity
+                });
+                
+
+                commandBuffer.SetComponent(weaponEntity, new GhostOwnerComponent
+                {
+                    NetworkId = connectionId
+                });
+                commandBuffer.SetComponent(characterGhost, new GhostOwnerComponent
+                {
+                    NetworkId = connectionId
+                });
             }
             
             commandBuffer.Playback(state.EntityManager);

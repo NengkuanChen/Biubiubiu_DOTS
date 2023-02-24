@@ -1,4 +1,6 @@
-﻿using Unity.Entities;
+﻿using System;
+using Unity.Entities;
+using Unity.NetCode;
 using UnityEngine;
 
 namespace Battle.Weapon
@@ -33,6 +35,8 @@ namespace Battle.Weapon
         }
     }
     
+    [Serializable]
+    [GhostComponent]
     public struct WeaponOwnerComponent : IComponentData
     {
         public Entity OwnerPlayer;

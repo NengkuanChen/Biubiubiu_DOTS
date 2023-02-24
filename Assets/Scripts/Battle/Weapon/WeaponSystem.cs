@@ -35,7 +35,7 @@ namespace Battle.Weapon
     {
         public void OnCreate(ref SystemState state)
         {
-            state.RequireForUpdate<SetUpWeaponRequestComponent>();
+            
         }
 
         public void OnDestroy(ref SystemState state)
@@ -46,56 +46,59 @@ namespace Battle.Weapon
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
-            var networkIdFromEntity = state.GetComponentLookup<NetworkIdComponent>(true);
-            foreach (var (setUpWeaponRequestComponent, entity) in SystemAPI.Query<RefRO<SetUpWeaponRequestComponent>>().WithEntityAccess())
+            WeaponSetupJob weaponSetupJob = new WeaponSetupJob
             {
-                var characterEntity = SystemAPI.GetComponent<FirstPersonPlayer>(setUpWeaponRequestComponent.ValueRO.ForPlayer).ControlledCharacter;
-                if (characterEntity != Entity.Null)
+                commandBuffer = SystemAPI.GetSingletonRW<PostPredictionPreTransformsECBSystem.Singleton>().ValueRW
+                    .CreateCommandBuffer(state.WorldUnmanaged),
+                WeaponControlLookUp = SystemAPI.GetComponentLookup<WeaponControlComponent>(true),
+                FirstPersonCharacterComponentLookup = SystemAPI.GetComponentLookup<FirstPersonCharacterComponent>(true),
+                LinkedEntityGroupLookup = SystemAPI.GetBufferLookup<LinkedEntityGroup>(false),
+                OwningPlayerLookup = SystemAPI.GetComponentLookup<OwningPlayer>(false),
+            };
+            weaponSetupJob.Schedule();
+        }
+        
+        
+        public partial struct WeaponSetupJob : IJobEntity
+        {
+            public EntityCommandBuffer commandBuffer;
+            [ReadOnly]
+            public ComponentLookup<WeaponControlComponent> WeaponControlLookUp; 
+            [ReadOnly]
+            public ComponentLookup<FirstPersonCharacterComponent> FirstPersonCharacterComponentLookup;
+            public BufferLookup<LinkedEntityGroup> LinkedEntityGroupLookup;
+            public ComponentLookup<OwningPlayer> OwningPlayerLookup;
+
+            void Execute(Entity entity, ref ActiveWeaponComponent activeWeapon)
+            {
+                if (activeWeapon.WeaponEntity != activeWeapon.PreviousWeaponEntity)
                 {
-                    var weaponEntity = commandBuffer.Instantiate(setUpWeaponRequestComponent.ValueRO.WeaponEntity);
-                    commandBuffer.AddComponent(weaponEntity, new WeaponOwnerComponent
+                    if (WeaponControlLookUp.HasComponent(activeWeapon.WeaponEntity))
                     {
-                        OwnerPlayer = setUpWeaponRequestComponent.ValueRO.ForPlayer,
-                        OwnerCharacter = characterEntity
-                    });
-                    commandBuffer.SetComponent(weaponEntity, new GhostOwnerComponent
-                    {
-                        NetworkId = networkIdFromEntity[setUpWeaponRequestComponent.ValueRO.ForConnection].Value
-                    });
-                    commandBuffer.AddComponent(weaponEntity, new Parent
-                    {
-                        Value = SystemAPI.GetComponent<FirstPersonCharacterComponent>(characterEntity).WeaponAnimationSocketEntity,
-                    });
-                    // var linkedEntityGroups = SystemAPI.GetBuffer<LinkedEntityGroup>(characterEntity);
-                    commandBuffer.AppendToBuffer<LinkedEntityGroup>(characterEntity, new LinkedEntityGroup
-                    {
-                        Value = weaponEntity
-                    });
-                    commandBuffer.SetComponent(weaponEntity, new LocalTransform
-                    {
-                        Position = float3.zero,
-                        Rotation = quaternion.identity,
-                        Scale = 1,
-                    });
-                    
-                    commandBuffer.DestroyEntity(entity);
+                        if (FirstPersonCharacterComponentLookup.TryGetComponent(entity,
+                                out FirstPersonCharacterComponent character))
+                        {
+                            commandBuffer.AddComponent(activeWeapon.WeaponEntity,
+                                new Parent { Value = character.WeaponAnimationSocketEntity });
+                            commandBuffer.AddComponent(activeWeapon.WeaponEntity, new WeaponOwnerComponent
+                            {
+                                OwnerCharacter = entity,
+                                OwnerPlayer = OwningPlayerLookup[entity].Entity
+                            });
+                            // commandBuffer.SetComponent(activeWeapon.WeaponEntity, new LocalTransform
+                            // {
+                            //     Position = float3.zero,
+                            //     Rotation = quaternion.identity,
+                            // });
+                            DynamicBuffer<LinkedEntityGroup> linkedEntityBuffer = LinkedEntityGroupLookup[entity];
+                            linkedEntityBuffer.Add(new LinkedEntityGroup { Value = activeWeapon.WeaponEntity });
+                        }
+                    }
+                    activeWeapon.PreviousWeaponEntity = activeWeapon.WeaponEntity;
                 }
             }
-            commandBuffer.Playback(state.EntityManager);
         }
     }
     
     
-    public struct SetUpWeaponRequestComponent : IComponentData
-    {
-        public Entity ForPlayer;
-        public Entity ForConnection;
-        public Entity WeaponEntity;
-    }
-    
-    public struct CharacterActiveWeaponComponent : IComponentData
-    {
-        public Entity WeaponEntity;
-    }
 }
