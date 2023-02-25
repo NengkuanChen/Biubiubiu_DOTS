@@ -7,14 +7,14 @@ namespace Battle.Weapon
     public struct BulletInitialPhysicsPropertyComponent : IComponentData
     {
         public float InitialSpeed;
-        public float GravityMultiplier;
+        public bool HasInitialized;
     }
+    
     
     public class BulletInitialPhysicsPropertyComponentAuthoring: MonoBehaviour
     {
         public float InitialSpeed;
-        public float GravityMultiplier;
-        
+
         public class BulletInitialPhysicsPropertyComponentBaker : Baker<BulletInitialPhysicsPropertyComponentAuthoring>
         {
             public override void Bake(BulletInitialPhysicsPropertyComponentAuthoring authoring)
@@ -22,7 +22,7 @@ namespace Battle.Weapon
                 AddComponent(new BulletInitialPhysicsPropertyComponent
                 {
                     InitialSpeed = authoring.InitialSpeed,
-                    GravityMultiplier = authoring.GravityMultiplier
+                    HasInitialized = false
                 });
             }
         }

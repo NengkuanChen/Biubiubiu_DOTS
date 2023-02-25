@@ -7,7 +7,6 @@ namespace Battle.Weapon
     {
         public float Damage;
         public float LifeTime;
-        public float MaxLifeTime;
     }
     
     public class BulletAuthoring : MonoBehaviour
@@ -21,8 +20,7 @@ namespace Battle.Weapon
                 AddComponent(new Bullet
                 {
                     Damage = authoring.Damage,
-                    LifeTime = 0f,
-                    MaxLifeTime = authoring.MaxLifeTime
+                    LifeTime = authoring.MaxLifeTime
                 });
             }
         }

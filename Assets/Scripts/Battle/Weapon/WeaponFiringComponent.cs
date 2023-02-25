@@ -8,7 +8,7 @@ namespace Battle.Weapon
     {
         public int RoundBulletsCounter;
         public float RoundShotTimer;
-        public float TickBulletsCounter;
+        public int TickBulletsCounter;
         public float TickShotTimer;
         public bool IsFiring;
     }

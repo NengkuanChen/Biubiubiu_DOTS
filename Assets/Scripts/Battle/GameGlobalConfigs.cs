@@ -12,6 +12,10 @@ namespace Battle
         [SerializeField]
         private RecoilConfig recoilConfig;
         public RecoilConfig RecoilConfig => recoilConfig;
+        
+        [SerializeField]
+        private SpreadConfig spreadConfig;
+        public SpreadConfig SpreadConfig => spreadConfig;
 
         private void Awake()
         {

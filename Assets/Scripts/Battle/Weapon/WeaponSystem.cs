@@ -18,35 +18,20 @@ namespace Battle.Weapon
     { }
 
     
-    public struct WeaponSystem : ISystem
-    {
-        public void OnCreate(ref SystemState state)
-        {
-            state.RequireForUpdate<WeaponComponent>();
-            state.RequireForUpdate<WeaponOwnerComponent>();
-        }
-
-        public void OnDestroy(ref SystemState state)
-        {
-            
-        }
-
-        public void OnUpdate(ref SystemState state)
-        {
-            
-        }
-    }
-    
     
     [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.ThinClientSimulation | WorldSystemFilterFlags.ServerSimulation)]
     [UpdateInGroup(typeof(WeaponPredictionUpdateGroup), OrderFirst = true)]
     [BurstCompile]
-    public partial struct WeaponFiringRegisterSystem : ISystem
+    public partial struct WeaponSystem : ISystem
     {
+
+        private ComponentLookup<WorldTransform> worldTransformLookup;
+
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<WeaponComponent>();
             state.RequireForUpdate<WeaponOwnerComponent>();
+            worldTransformLookup = state.GetComponentLookup<WorldTransform>();
         }
 
         public void OnDestroy(ref SystemState state)
@@ -57,11 +42,30 @@ namespace Battle.Weapon
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
+            var commandBuffer = SystemAPI.GetSingletonRW<PostPredictionPreTransformsECBSystem.Singleton>().ValueRW
+                .CreateCommandBuffer(state.WorldUnmanaged);
+            worldTransformLookup.Update(ref state);
             WeaponFiringRegistrationJob registrationJob = new WeaponFiringRegistrationJob
             {
                 DeltaTime = SystemAPI.Time.DeltaTime
             };
             state.Dependency = registrationJob.Schedule(state.Dependency);
+            state.Dependency.Complete();
+            
+            WeaponMagazineHandlingComponentJob magazineHandlingJob = new WeaponMagazineHandlingComponentJob
+            {
+                DeltaTime = SystemAPI.Time.DeltaTime
+            };
+            state.Dependency = magazineHandlingJob.Schedule(state.Dependency);
+            state.Dependency.Complete();
+            
+            WeaponBulletSpawningJob bulletSpawningJob = new WeaponBulletSpawningJob
+            {
+                DeltaTime = SystemAPI.Time.DeltaTime,
+                CommandBuffer = commandBuffer,
+                WorldTransformLookup = worldTransformLookup
+            };
+            state.Dependency = bulletSpawningJob.Schedule(state.Dependency);
             state.Dependency.Complete();
         }
         
@@ -70,6 +74,7 @@ namespace Battle.Weapon
         {
             public float DeltaTime;
 
+            [BurstCompile]
             void Execute(Entity entity, ref WeaponFiringComponent firingComponent,
                 ref WeaponControlComponent weaponControl, ref WeaponComponent weaponComponent, in GhostOwnerComponent ghostOwner)
             {
@@ -88,15 +93,16 @@ namespace Battle.Weapon
 
                 if (weaponComponent.FireInterval > 0)
                 {
-                    var shotInterval = math.clamp(firingComponent.TickShotTimer, 0, weaponComponent.FireInterval);
+                    firingComponent.TickShotTimer = math.clamp(firingComponent.TickShotTimer, 0,
+                        math.max(weaponComponent.FireInterval + 0.01f, DeltaTime));
                     while (firingComponent.IsFiring && firingComponent.TickShotTimer > weaponComponent.FireInterval)
                     {
                         firingComponent.TickBulletsCounter++;
                         firingComponent.RoundBulletsCounter++;
-                        firingComponent.RoundShotTimer += shotInterval;
+                        firingComponent.RoundShotTimer += weaponComponent.FireInterval;
                     
                         // Consume shoot time
-                        firingComponent.TickShotTimer -= shotInterval;
+                        firingComponent.TickShotTimer -= weaponComponent.FireInterval;
 
                         // Stop firing after initial shot for non-auto fire
                         if (!weaponComponent.FullAuto)
@@ -113,11 +119,15 @@ namespace Battle.Weapon
             }
         }
         
-        
+        [BurstCompile]
         public partial struct WeaponMagazineHandlingComponentJob : IJobEntity
         {
-            void Excute(Entity entity, ref WeaponFiringComponent weaponFiringComponent,
-                ref WeaponMagazineComponent magazine, ref WeaponReloadComponent reloadComponent)
+            public float DeltaTime;
+            
+            [BurstCompile]
+            void Execute(Entity entity, ref WeaponFiringComponent weaponFiringComponent,
+                ref WeaponMagazineComponent magazine, ref WeaponReloadComponent reloadComponent, 
+                ref WeaponControlComponent weaponControl, in GhostOwnerComponent ghostOwner)
             {
                 if (reloadComponent.IsReloading)
                 {
@@ -125,12 +135,65 @@ namespace Battle.Weapon
                     weaponFiringComponent.TickBulletsCounter = 0;
                     weaponFiringComponent.RoundShotTimer = 0;
                     weaponFiringComponent.RoundBulletsCounter = 0;
+                    reloadComponent.ReloadTimeLeft -= DeltaTime;
+                    if (reloadComponent.ReloadTimeLeft <= 0)
+                    {
+                        FinishedReload(entity, ref magazine, ref reloadComponent);
+                    }
                 }
                 else
                 {
-                    if (magazine.MagazineRestBullet <= 0)
+                    if (magazine.MagazineRestBullet <= 0 || (weaponControl.ReloadPressed && magazine.MagazineRestBullet < magazine.MagazineSize))
                     {
-                        reloadComponent.IsReloading = true;
+                        Reload(entity, ref magazine, ref reloadComponent);
+                    }
+
+                    weaponFiringComponent.TickBulletsCounter = math.min(weaponFiringComponent.TickBulletsCounter,
+                        magazine.MagazineRestBullet);
+                    magazine.MagazineRestBullet -= weaponFiringComponent.TickBulletsCounter;
+                }
+
+                
+            }
+            
+            private void Reload(Entity entity, ref WeaponMagazineComponent magazine, ref WeaponReloadComponent reloadComponent)
+            {
+                reloadComponent.IsReloading = true;
+                reloadComponent.ReloadTimeLeft = magazine.ReloadTime;
+            }
+            
+            private void FinishedReload(Entity entity, ref WeaponMagazineComponent magazine, ref WeaponReloadComponent reloadComponent)
+            {
+                reloadComponent.IsReloading = false;
+                magazine.MagazineRestBullet = magazine.MagazineSize;
+            }
+        }
+        
+        [BurstCompile]
+        public partial struct WeaponBulletSpawningJob : IJobEntity
+        {
+            public float DeltaTime;
+            public EntityCommandBuffer CommandBuffer;
+            public ComponentLookup<WorldTransform> WorldTransformLookup;
+
+            [BurstCompile]
+            void Execute(Entity entity, ref WeaponFiringComponent weaponFiringComponent,
+                ref WeaponBulletComponent weaponBulletComponent, ref WeaponComponent weaponComponent, 
+                in GhostOwnerComponent ghostOwner)
+            {
+                if (weaponFiringComponent.TickBulletsCounter > 0)
+                {
+                    for (int i = 0; i < weaponFiringComponent.TickBulletsCounter; i++)
+                    {
+                        var bulletEntity = CommandBuffer.Instantiate(weaponBulletComponent.BulletEntity);
+                        var muzzlePosition = WorldTransformLookup[weaponComponent.MuzzleSocket].Position;
+                        var muzzleRotation = WorldTransformLookup[weaponComponent.MuzzleSocket].Rotation;
+                        CommandBuffer.SetComponent(bulletEntity,
+                            LocalTransform.FromPositionRotation(muzzlePosition, muzzleRotation));
+                        CommandBuffer.SetComponent(bulletEntity, new GhostOwnerComponent
+                        {
+                            NetworkId = ghostOwner.NetworkId
+                        });
                     }
                 }
             }
