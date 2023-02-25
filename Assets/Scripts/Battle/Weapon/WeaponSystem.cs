@@ -176,7 +176,7 @@ namespace Battle.Weapon
         {
             [ReadOnly]
             public float DeltaTime;
-            [ReadOnly]
+
             public EntityCommandBuffer CommandBuffer;
             [ReadOnly]
             public ComponentLookup<WorldTransform> WorldTransformLookup;

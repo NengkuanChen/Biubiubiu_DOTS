@@ -73,6 +73,8 @@ namespace UI
         {
             var server = GameBootstrap.CreateServerWorld("ServerWorld");
             var client = GameBootstrap.CreateClientWorld("ClientWorld");
+            CreateTickRateConfigSingleton(true);
+            CreateTickRateConfigSingleton(false);
             DestroyLocalSimulationWorld();
             SceneManager.LoadSceneAsync("Lobby", LoadSceneMode.Additive);
             if (World.DefaultGameObjectInjectionWorld == null)
@@ -112,6 +114,7 @@ namespace UI
         {
             var client = GameBootstrap.CreateClientWorld("ClientWorld");
             DestroyLocalSimulationWorld();
+            CreateTickRateConfigSingleton(false);
             SceneManager.LoadSceneAsync("Lobby", LoadSceneMode.Additive);
             if (World.DefaultGameObjectInjectionWorld == null)
                 World.DefaultGameObjectInjectionWorld = client;
@@ -131,7 +134,28 @@ namespace UI
         
         private void DestroyLocalSimulationWorld()
         {
-            WorldGetter.GetLocalWorld()?.Dispose();
+            // WorldGetter.GetLocalWorld()?.Dispose();
+        }
+
+        private void CreateTickRateConfigSingleton(bool isServer)
+        {
+            var entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+            if (isServer)
+            {
+                entityManager = WorldGetter.GetServerWorld().EntityManager;
+            }
+            else
+            {
+                entityManager = WorldGetter.GetClientWorld().EntityManager;
+            }
+
+            var entity = entityManager.CreateEntity();
+            ClientServerTickRate tickRate = new ClientServerTickRate();
+            tickRate.ResolveDefaults();
+            tickRate.SimulationTickRate = 60;
+            tickRate.NetworkTickRate = 60;
+            tickRate.MaxSimulationStepsPerFrame = 6;
+            entityManager.AddComponentData(entity, tickRate);
         }
         
     }

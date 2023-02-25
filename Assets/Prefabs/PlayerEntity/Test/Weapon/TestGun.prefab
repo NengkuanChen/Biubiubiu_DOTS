@@ -189,10 +189,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ComponentOverrides:
   - FullTypeName: Unity.Transforms.LocalTransform
-    GameObject: {fileID: 3276825593709502202}
+    EntityIndex: 0
     PrefabType: -1
     SendTypeOptimization: -1
-    VariantHash: 6907887384974514810
+    VariantHash: 10188360468653526834
 --- !u!1 &9126274475777629243
 GameObject:
   m_ObjectHideFlags: 0

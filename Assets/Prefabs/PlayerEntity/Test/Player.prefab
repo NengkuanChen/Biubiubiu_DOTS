@@ -96,12 +96,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ComponentOverrides:
   - FullTypeName: Unity.NetCode.AutoCommandTarget
-    GameObject: {fileID: 577874318210893199}
+    EntityIndex: 0
     PrefabType: -1
     SendTypeOptimization: -1
     VariantHash: 243651038875383252
   - FullTypeName: Unity.Transforms.LocalTransform
-    GameObject: {fileID: 577874318210893199}
+    EntityIndex: 0
     PrefabType: -1
     SendTypeOptimization: -1
     VariantHash: 10188360468653526834

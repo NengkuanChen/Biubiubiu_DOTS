@@ -471,12 +471,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ComponentOverrides:
   - FullTypeName: Unity.Physics.PhysicsVelocity
-    GameObject: {fileID: 1555240849038293811}
+    EntityIndex: 0
     PrefabType: -1
     SendTypeOptimization: 0
     VariantHash: 10188360468653526834
   - FullTypeName: Unity.Transforms.LocalTransform
-    GameObject: {fileID: 1555240849038293811}
+    EntityIndex: 0
     PrefabType: -1
     SendTypeOptimization: -1
     VariantHash: 14508826221128411612
