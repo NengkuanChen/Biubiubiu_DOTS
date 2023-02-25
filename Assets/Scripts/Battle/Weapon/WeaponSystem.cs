@@ -31,7 +31,7 @@ namespace Battle.Weapon
         {
             state.RequireForUpdate<WeaponComponent>();
             state.RequireForUpdate<WeaponOwnerComponent>();
-            worldTransformLookup = state.GetComponentLookup<WorldTransform>();
+            worldTransformLookup = state.GetComponentLookup<WorldTransform>(true);
         }
 
         public void OnDestroy(ref SystemState state)
@@ -49,14 +49,14 @@ namespace Battle.Weapon
             {
                 DeltaTime = SystemAPI.Time.DeltaTime
             };
-            state.Dependency = registrationJob.Schedule(state.Dependency);
+            state.Dependency = registrationJob.ScheduleParallel(state.Dependency);
             state.Dependency.Complete();
             
             WeaponMagazineHandlingComponentJob magazineHandlingJob = new WeaponMagazineHandlingComponentJob
             {
                 DeltaTime = SystemAPI.Time.DeltaTime
             };
-            state.Dependency = magazineHandlingJob.Schedule(state.Dependency);
+            state.Dependency = magazineHandlingJob.ScheduleParallel(state.Dependency);
             state.Dependency.Complete();
             
             WeaponBulletSpawningJob bulletSpawningJob = new WeaponBulletSpawningJob
@@ -72,6 +72,7 @@ namespace Battle.Weapon
         [BurstCompile]
         public partial struct WeaponFiringRegistrationJob : IJobEntity
         {
+            [ReadOnly]
             public float DeltaTime;
 
             [BurstCompile]
@@ -122,6 +123,7 @@ namespace Battle.Weapon
         [BurstCompile]
         public partial struct WeaponMagazineHandlingComponentJob : IJobEntity
         {
+            [ReadOnly]
             public float DeltaTime;
             
             [BurstCompile]
@@ -172,8 +174,11 @@ namespace Battle.Weapon
         [BurstCompile]
         public partial struct WeaponBulletSpawningJob : IJobEntity
         {
+            [ReadOnly]
             public float DeltaTime;
+            [ReadOnly]
             public EntityCommandBuffer CommandBuffer;
+            [ReadOnly]
             public ComponentLookup<WorldTransform> WorldTransformLookup;
 
             [BurstCompile]
