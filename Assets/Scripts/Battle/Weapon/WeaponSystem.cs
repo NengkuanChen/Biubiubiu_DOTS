@@ -27,11 +27,14 @@ namespace Battle.Weapon
 
         private ComponentLookup<WorldTransform> worldTransformLookup;
 
+        private ComponentLookup<FirstPersonCharacterComponent> characterComponentLookup;
+
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<WeaponComponent>();
             state.RequireForUpdate<WeaponOwnerComponent>();
             worldTransformLookup = state.GetComponentLookup<WorldTransform>(true);
+            characterComponentLookup = state.GetComponentLookup<FirstPersonCharacterComponent>(true);
         }
 
         public void OnDestroy(ref SystemState state)
@@ -44,7 +47,7 @@ namespace Battle.Weapon
         {
             var commandBuffer = SystemAPI.GetSingletonRW<PostPredictionPreTransformsECBSystem.Singleton>().ValueRW
                 .CreateCommandBuffer(state.WorldUnmanaged);
-            var characterComponentLookup = state.GetComponentLookup<FirstPersonCharacterComponent>();
+            characterComponentLookup.Update(ref state);
             worldTransformLookup.Update(ref state);
             WeaponFiringRegistrationJob registrationJob = new WeaponFiringRegistrationJob
             {
@@ -226,9 +229,19 @@ namespace Battle.Weapon
     [BurstCompile]
     public partial struct WeaponActiveSystem : ISystem
     {
+        
+        private ComponentLookup<WeaponControlComponent> weaponControlLookUp;
+        private ComponentLookup<FirstPersonCharacterComponent> firstPersonCharacterComponentLookup;
+        private BufferLookup<LinkedEntityGroup> linkedEntityGroupLookup;
+        private ComponentLookup<OwningPlayer> owningPlayerLookup;
+
         public void OnCreate(ref SystemState state)
         {
-            
+            state.RequireForUpdate<WeaponComponent>();
+            weaponControlLookUp = state.GetComponentLookup<WeaponControlComponent>(true);
+            firstPersonCharacterComponentLookup = state.GetComponentLookup<FirstPersonCharacterComponent>(true);
+            linkedEntityGroupLookup = state.GetBufferLookup<LinkedEntityGroup>(false);
+            owningPlayerLookup = state.GetComponentLookup<OwningPlayer>(false);
         }
 
         public void OnDestroy(ref SystemState state)
@@ -239,14 +252,18 @@ namespace Battle.Weapon
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
+            weaponControlLookUp.Update(ref state);
+            firstPersonCharacterComponentLookup.Update(ref state);
+            linkedEntityGroupLookup.Update(ref state);
+            owningPlayerLookup.Update(ref state);
             WeaponSetupJob weaponSetupJob = new WeaponSetupJob
             {
                 commandBuffer = SystemAPI.GetSingletonRW<PostPredictionPreTransformsECBSystem.Singleton>().ValueRW
                     .CreateCommandBuffer(state.WorldUnmanaged),
-                WeaponControlLookUp = SystemAPI.GetComponentLookup<WeaponControlComponent>(true),
-                FirstPersonCharacterComponentLookup = SystemAPI.GetComponentLookup<FirstPersonCharacterComponent>(true),
-                LinkedEntityGroupLookup = SystemAPI.GetBufferLookup<LinkedEntityGroup>(false),
-                OwningPlayerLookup = SystemAPI.GetComponentLookup<OwningPlayer>(false),
+                WeaponControlLookUp = weaponControlLookUp,
+                FirstPersonCharacterComponentLookup = firstPersonCharacterComponentLookup,
+                LinkedEntityGroupLookup = linkedEntityGroupLookup,
+                OwningPlayerLookup = owningPlayerLookup,
             };
             weaponSetupJob.Schedule();
         }

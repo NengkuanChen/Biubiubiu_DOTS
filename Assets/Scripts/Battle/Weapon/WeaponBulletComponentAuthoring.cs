@@ -24,7 +24,7 @@ namespace Battle.Weapon
     
     public class WeaponBulletComponentAuthoring : MonoBehaviour
     {
-        public GameObject BulleftPrefab;
+        public GameObject BulletPrefab;
         public GameObject BulletVisualPrefab;
         
         public class WeaponBulletComponentAuthoringBaker : Baker<WeaponBulletComponentAuthoring>
@@ -32,7 +32,7 @@ namespace Battle.Weapon
             public override void Bake(WeaponBulletComponentAuthoring authoring)
             {
                 WeaponBulletComponent component = default(WeaponBulletComponent);
-                component.BulletEntity = GetEntity(authoring.BulleftPrefab);
+                component.BulletEntity = GetEntity(authoring.BulletPrefab);
                 component.BulletVisualEntity = GetEntity(authoring.BulletVisualPrefab);
                 AddComponent(component);
             }

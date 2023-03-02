@@ -16,9 +16,12 @@ namespace Battle.Weapon
     [BurstCompile]
     public partial struct BulletSystem : ISystem
     {
+        private ComponentLookup<Bullet> bulletLookup;
+
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<Bullet>();
+            bulletLookup = state.GetComponentLookup<Bullet>();
         }
 
         public void OnDestroy(ref SystemState state)
@@ -30,6 +33,7 @@ namespace Battle.Weapon
         {
             var commandBuffer = SystemAPI.GetSingletonRW<PostPredictionPreTransformsECBSystem.Singleton>().ValueRW
                 .CreateCommandBuffer(state.WorldUnmanaged);
+            bulletLookup.Update(ref state);
             
             //Initialize Bullet Physics Property
             var bulletInitializeJob = new BulletPhysicsPropertyInitializeJob();
@@ -51,7 +55,7 @@ namespace Battle.Weapon
             {
                 commandBuffer = SystemAPI.GetSingletonRW<PostPredictionPreTransformsECBSystem.Singleton>().ValueRW
                     .CreateCommandBuffer(state.WorldUnmanaged),
-                bulletLookup = state.GetComponentLookup<Bullet>(),
+                bulletLookup = bulletLookup,
                 IsServer = isServer,
             }.Schedule(SystemAPI.GetSingleton<SimulationSingleton>(), state.Dependency);
             state.Dependency.Complete();
