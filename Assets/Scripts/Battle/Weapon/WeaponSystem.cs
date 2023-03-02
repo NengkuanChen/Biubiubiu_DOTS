@@ -44,6 +44,7 @@ namespace Battle.Weapon
         {
             var commandBuffer = SystemAPI.GetSingletonRW<PostPredictionPreTransformsECBSystem.Singleton>().ValueRW
                 .CreateCommandBuffer(state.WorldUnmanaged);
+            var characterComponentLookup = state.GetComponentLookup<FirstPersonCharacterComponent>();
             worldTransformLookup.Update(ref state);
             WeaponFiringRegistrationJob registrationJob = new WeaponFiringRegistrationJob
             {
@@ -62,10 +63,11 @@ namespace Battle.Weapon
             WeaponBulletSpawningJob bulletSpawningJob = new WeaponBulletSpawningJob
             {
                 DeltaTime = SystemAPI.Time.DeltaTime,
-                CommandBuffer = commandBuffer,
-                WorldTransformLookup = worldTransformLookup
+                CommandBuffer = commandBuffer.AsParallelWriter(),
+                WorldTransformLookup = worldTransformLookup,
+                CharacterComponentLookUp = characterComponentLookup
             };
-            state.Dependency = bulletSpawningJob.Schedule(state.Dependency);
+            state.Dependency = bulletSpawningJob.ScheduleParallel(state.Dependency);
             state.Dependency.Complete();
         }
         
@@ -89,6 +91,7 @@ namespace Battle.Weapon
                         firingComponent.RoundBulletsCounter = 0;
                         firingComponent.RoundShotTimer = 0;
                     }
+                    
                     firingComponent.IsFiring = true;
                 }
 
@@ -171,34 +174,45 @@ namespace Battle.Weapon
             }
         }
         
-        [BurstCompile]
+        // [BurstCompile]
         public partial struct WeaponBulletSpawningJob : IJobEntity
         {
             [ReadOnly]
             public float DeltaTime;
 
-            public EntityCommandBuffer CommandBuffer;
+            public EntityCommandBuffer.ParallelWriter CommandBuffer;
             [ReadOnly]
             public ComponentLookup<WorldTransform> WorldTransformLookup;
 
-            [BurstCompile]
-            void Execute(Entity entity, ref WeaponFiringComponent weaponFiringComponent,
-                ref WeaponBulletComponent weaponBulletComponent, ref WeaponComponent weaponComponent, 
+            [ReadOnly] public ComponentLookup<FirstPersonCharacterComponent> CharacterComponentLookUp;
+
+            // [BurstCompile]
+            void Execute(Entity entity, [ChunkIndexInQuery] int chunkIndexInQuery, ref WeaponFiringComponent weaponFiringComponent,
+                ref WeaponBulletComponent weaponBulletComponent, ref WeaponOwnerComponent ownerComponent, 
                 in GhostOwnerComponent ghostOwner)
             {
                 if (weaponFiringComponent.TickBulletsCounter > 0)
                 {
                     for (int i = 0; i < weaponFiringComponent.TickBulletsCounter; i++)
                     {
-                        var bulletEntity = CommandBuffer.Instantiate(weaponBulletComponent.BulletEntity);
-                        var muzzlePosition = WorldTransformLookup[weaponComponent.MuzzleSocket].Position;
-                        var muzzleRotation = WorldTransformLookup[weaponComponent.MuzzleSocket].Rotation;
-                        CommandBuffer.SetComponent(bulletEntity,
-                            LocalTransform.FromPositionRotation(muzzlePosition, muzzleRotation));
-                        CommandBuffer.SetComponent(bulletEntity, new GhostOwnerComponent
+                        var bulletEntity = CommandBuffer.Instantiate(chunkIndexInQuery, weaponBulletComponent.BulletEntity);
+                        CommandBuffer.SetComponent(chunkIndexInQuery, bulletEntity, new GhostOwnerComponent
                         {
                             NetworkId = ghostOwner.NetworkId
                         });
+                        CommandBuffer.SetComponent(chunkIndexInQuery, bulletEntity, new BulletOwner
+                        {
+                            OwnerWeapon = entity,
+                            OwnerCharacter = ownerComponent.OwnerCharacter,
+                            OwnerPlayer = ownerComponent.OwnerPlayer,
+                            OwnerID = ghostOwner.NetworkId
+                        });
+                        var characterComponent = CharacterComponentLookUp[ownerComponent.OwnerCharacter];
+                        var viewPosition = WorldTransformLookup[characterComponent.ViewEntity].Position;
+                        var viewRotation = WorldTransformLookup[characterComponent.ViewEntity].Rotation;
+                        CommandBuffer.SetComponent(chunkIndexInQuery, bulletEntity,
+                            LocalTransform.FromPositionRotation(viewPosition, viewRotation));
+                        
                     }
                 }
             }

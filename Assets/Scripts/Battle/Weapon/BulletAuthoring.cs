@@ -8,6 +8,14 @@ namespace Battle.Weapon
         public float Damage;
         public float LifeTime;
     }
+
+    public struct BulletOwner : IComponentData
+    {
+        public Entity OwnerPlayer;
+        public Entity OwnerWeapon;
+        public Entity OwnerCharacter;
+        public int OwnerID;
+    }
     
     public class BulletAuthoring : MonoBehaviour
     {
@@ -22,6 +30,7 @@ namespace Battle.Weapon
                     Damage = authoring.Damage,
                     LifeTime = authoring.MaxLifeTime
                 });
+                AddComponent(new BulletOwner());
             }
         }
     }

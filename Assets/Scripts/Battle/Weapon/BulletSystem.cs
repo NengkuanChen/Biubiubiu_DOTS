@@ -34,7 +34,7 @@ namespace Battle.Weapon
             //Initialize Bullet Physics Property
             var bulletInitializeJob = new BulletPhysicsPropertyInitializeJob();
             var isServer = state.WorldUnmanaged.IsServer();
-            state.Dependency = bulletInitializeJob.Schedule(state.Dependency);
+            state.Dependency = bulletInitializeJob.ScheduleParallel(state.Dependency);
             state.Dependency.Complete();
             
             //Handle Bullet LifeTime
