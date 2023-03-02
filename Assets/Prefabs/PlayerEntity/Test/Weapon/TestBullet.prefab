@@ -139,7 +139,7 @@ MonoBehaviour:
     m_Template: {fileID: 0}
     m_CollisionResponse:
       m_Override: 0
-      m_Value: 0
+      m_Value: 1
     m_Friction:
       m_Override: 0
       m_Value:
@@ -246,7 +246,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Damage: 10
-  MaxLifeTime: 3
+  MaxLifeTime: 2
 --- !u!114 &763149151299612421
 MonoBehaviour:
   m_ObjectHideFlags: 0
