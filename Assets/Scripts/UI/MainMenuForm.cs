@@ -154,7 +154,7 @@ namespace UI
             tickRate.ResolveDefaults();
             tickRate.SimulationTickRate = 60;
             tickRate.NetworkTickRate = 60;
-            tickRate.MaxSimulationStepsPerFrame = 6;
+            tickRate.MaxSimulationStepsPerFrame = 4;
             entityManager.AddComponentData(entity, tickRate);
         }
         

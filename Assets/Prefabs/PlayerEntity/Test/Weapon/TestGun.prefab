@@ -141,7 +141,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   BulletPrefab: {fileID: 9064771038326754887, guid: 346ad40cddfb79b4080d83a069857f4a,
     type: 3}
-  BulletVisualPrefab: {fileID: 0}
 --- !u!114 &670039581324074600
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -192,8 +191,8 @@ MonoBehaviour:
   - FullTypeName: Unity.Transforms.LocalTransform
     EntityIndex: 0
     PrefabType: -1
-    SendTypeOptimization: -1
-    VariantHash: 10188360468653526834
+    SendTypeOptimization: 3
+    VariantHash: 17312028693704544116
 --- !u!1 &9126274475777629243
 GameObject:
   m_ObjectHideFlags: 0

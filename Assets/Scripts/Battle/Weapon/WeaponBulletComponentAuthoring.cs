@@ -1,5 +1,7 @@
-﻿using Unity.Entities;
+﻿using System;
+using Unity.Entities;
 using Unity.Mathematics;
+using Unity.NetCode;
 using UnityEngine;
 
 namespace Battle.Weapon
@@ -7,16 +9,21 @@ namespace Battle.Weapon
     public struct WeaponBulletComponent : IComponentData
     {
         public Entity BulletEntity;
-        public Entity BulletVisualEntity;
-
+        public bool IsGhost;
     }
     
-    public struct BulletSpawnRequest : IComponentData
+    
+
+    [Serializable]
+    public struct BulletSpawnRequestBuffer : IBufferElementData
     {
-        public Entity BulletEntity;
-        public Entity BulletVisualEntity;
-        public float3 WorldPosition;
-        public float3 Direction;
+        public quaternion Rotation;
+        public float3 Position;
+        public Entity OwnerCharacter;
+        public Entity OwnerPlayer;
+        public Entity OwnerWeapon;
+        public Entity BulletPrefab;
+        public bool IsGhost;
     }
     
     
@@ -25,15 +32,15 @@ namespace Battle.Weapon
     public class WeaponBulletComponentAuthoring : MonoBehaviour
     {
         public GameObject BulletPrefab;
-        public GameObject BulletVisualPrefab;
-        
+
         public class WeaponBulletComponentAuthoringBaker : Baker<WeaponBulletComponentAuthoring>
         {
             public override void Bake(WeaponBulletComponentAuthoring authoring)
             {
                 WeaponBulletComponent component = default(WeaponBulletComponent);
                 component.BulletEntity = GetEntity(authoring.BulletPrefab);
-                component.BulletVisualEntity = GetEntity(authoring.BulletVisualPrefab);
+                component.IsGhost = authoring.BulletPrefab.GetComponent<GhostAuthoringComponent>() != null;
+                AddBuffer<BulletSpawnRequestBuffer>();
                 AddComponent(component);
             }
         }

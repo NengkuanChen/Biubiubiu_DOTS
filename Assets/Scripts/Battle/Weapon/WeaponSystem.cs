@@ -14,7 +14,7 @@ namespace Battle.Weapon
     [UpdateInGroup(typeof(PredictedFixedStepSimulationSystemGroup))]
     [UpdateAfter(typeof(PhysicsSystemGroup))]
     [UpdateAfter(typeof(PredictedFixedStepTransformsUpdateSystem))]
-    public class WeaponPredictionUpdateGroup : ComponentSystemGroup
+    public partial class WeaponPredictionUpdateGroup : ComponentSystemGroup
     { }
 
     
@@ -25,7 +25,7 @@ namespace Battle.Weapon
     public partial struct WeaponSystem : ISystem
     {
 
-        private ComponentLookup<WorldTransform> worldTransformLookup;
+        private ComponentLookup<LocalToWorld> localToWorldLookup;
 
         private ComponentLookup<FirstPersonCharacterComponent> characterComponentLookup;
 
@@ -33,7 +33,7 @@ namespace Battle.Weapon
         {
             state.RequireForUpdate<WeaponComponent>();
             state.RequireForUpdate<WeaponOwnerComponent>();
-            worldTransformLookup = state.GetComponentLookup<WorldTransform>(true);
+            localToWorldLookup = state.GetComponentLookup<LocalToWorld>(true);
             characterComponentLookup = state.GetComponentLookup<FirstPersonCharacterComponent>(true);
         }
 
@@ -48,7 +48,7 @@ namespace Battle.Weapon
             var commandBuffer = SystemAPI.GetSingletonRW<PostPredictionPreTransformsECBSystem.Singleton>().ValueRW
                 .CreateCommandBuffer(state.WorldUnmanaged);
             characterComponentLookup.Update(ref state);
-            worldTransformLookup.Update(ref state);
+            localToWorldLookup.Update(ref state);
             WeaponFiringRegistrationJob registrationJob = new WeaponFiringRegistrationJob
             {
                 DeltaTime = SystemAPI.Time.DeltaTime
@@ -63,15 +63,17 @@ namespace Battle.Weapon
             state.Dependency = magazineHandlingJob.ScheduleParallel(state.Dependency);
             state.Dependency.Complete();
             
-            WeaponBulletSpawningJob bulletSpawningJob = new WeaponBulletSpawningJob
+            WeaponBulletSpawningRequestJob bulletSpawningRequestJob = new WeaponBulletSpawningRequestJob
             {
                 DeltaTime = SystemAPI.Time.DeltaTime,
                 CommandBuffer = commandBuffer.AsParallelWriter(),
-                WorldTransformLookup = worldTransformLookup,
-                CharacterComponentLookUp = characterComponentLookup
+                LocalToWorldLookup = localToWorldLookup,
+                CharacterComponentLookUp = characterComponentLookup,
+                IsServer = state.WorldUnmanaged.IsServer()
             };
-            state.Dependency = bulletSpawningJob.ScheduleParallel(state.Dependency);
+            state.Dependency = bulletSpawningRequestJob.ScheduleParallel(state.Dependency);
             state.Dependency.Complete();
+            
         }
         
         [BurstCompile]
@@ -177,45 +179,65 @@ namespace Battle.Weapon
             }
         }
         
-        // [BurstCompile]
-        public partial struct WeaponBulletSpawningJob : IJobEntity
+        [BurstCompile]
+        public partial struct WeaponBulletSpawningRequestJob : IJobEntity
         {
             [ReadOnly]
             public float DeltaTime;
 
-            public EntityCommandBuffer.ParallelWriter CommandBuffer;
             [ReadOnly]
-            public ComponentLookup<WorldTransform> WorldTransformLookup;
+            public ComponentLookup<LocalToWorld> LocalToWorldLookup;
 
-            [ReadOnly] public ComponentLookup<FirstPersonCharacterComponent> CharacterComponentLookUp;
+            [ReadOnly] 
+            public ComponentLookup<FirstPersonCharacterComponent> CharacterComponentLookUp;
+            
+            public EntityCommandBuffer.ParallelWriter CommandBuffer;
+            
+            [ReadOnly]
+            public bool IsServer;
 
-            // [BurstCompile]
+            [BurstCompile]
             void Execute(Entity entity, [ChunkIndexInQuery] int chunkIndexInQuery, ref WeaponFiringComponent weaponFiringComponent,
-                ref WeaponBulletComponent weaponBulletComponent, ref WeaponOwnerComponent ownerComponent, 
+                ref WeaponBulletComponent weaponBulletComponent, 
+                ref WeaponOwnerComponent ownerComponent, 
+                ref DynamicBuffer<BulletSpawnRequestBuffer> bulletSpawnRequestBuffer,
+                ref WeaponComponent weaponComponent,
                 in GhostOwnerComponent ghostOwner)
             {
-                if (weaponFiringComponent.TickBulletsCounter > 0)
+                if (weaponFiringComponent.IsFiring)
                 {
+                    var ownerViewPosition = LocalToWorldLookup[CharacterComponentLookUp[ownerComponent.OwnerCharacter].ViewEntity].Position;
+                    var ownerViewRotation = LocalToWorldLookup[CharacterComponentLookUp[ownerComponent.OwnerCharacter].ViewEntity].Rotation;
+                    var ownerMuzzlePosition = LocalToWorldLookup[weaponComponent.MuzzleSocket].Position;
+                    var ownerMuzzleRotation = LocalToWorldLookup[weaponComponent.MuzzleSocket].Rotation;
                     for (int i = 0; i < weaponFiringComponent.TickBulletsCounter; i++)
                     {
-                        var bulletEntity = CommandBuffer.Instantiate(chunkIndexInQuery, weaponBulletComponent.BulletEntity);
-                        CommandBuffer.SetComponent(chunkIndexInQuery, bulletEntity, new GhostOwnerComponent
+                        if (weaponBulletComponent.IsGhost || IsServer)
                         {
-                            NetworkId = ghostOwner.NetworkId
-                        });
-                        CommandBuffer.SetComponent(chunkIndexInQuery, bulletEntity, new BulletOwner
-                        {
-                            OwnerWeapon = entity,
-                            OwnerCharacter = ownerComponent.OwnerCharacter,
-                            OwnerPlayer = ownerComponent.OwnerPlayer,
-                            OwnerID = ghostOwner.NetworkId
-                        });
-                        var characterComponent = CharacterComponentLookUp[ownerComponent.OwnerCharacter];
-                        var viewPosition = WorldTransformLookup[characterComponent.ViewEntity].Position;
-                        var viewRotation = WorldTransformLookup[characterComponent.ViewEntity].Rotation;
-                        CommandBuffer.SetComponent(chunkIndexInQuery, bulletEntity,
-                            LocalTransform.FromPositionRotation(viewPosition, viewRotation));
+                            bulletSpawnRequestBuffer.Add(new BulletSpawnRequestBuffer
+                            {
+                                OwnerCharacter = ownerComponent.OwnerCharacter,
+                                OwnerPlayer = ownerComponent.OwnerPlayer,
+                                OwnerWeapon = entity,
+                                BulletPrefab = weaponBulletComponent.BulletEntity,
+                                Position = ownerViewPosition,
+                                Rotation = ownerViewRotation,
+                                IsGhost = weaponBulletComponent.IsGhost,
+                            });
+                        }
                         
+                        // else if (weaponBulletComponent.BulletVisualEntity != Entity.Null)
+                        // {
+                        //     bulletSpawnVisualRequestBuffer.Add(new BulletSpawnVisualRequestBuffer
+                        //     {
+                        //         OwnerCharacter = ownerComponent.OwnerCharacter,
+                        //         OwnerPlayer = ownerComponent.OwnerPlayer,
+                        //         OwnerWeapon = entity,
+                        //         BulletVisualPrefab = weaponBulletComponent.BulletVisualEntity,
+                        //         Position = ownerMuzzlePosition,
+                        //         Rotation = ownerMuzzleRotation,
+                        //     });
+                        // }
                     }
                 }
             }
