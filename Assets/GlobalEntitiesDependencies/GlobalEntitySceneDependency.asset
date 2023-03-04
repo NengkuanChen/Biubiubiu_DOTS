@@ -9,12 +9,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 83423c6821253f946aa2dd9db23584ed, type: 3}
   m_Name: GlobalEntitySceneDependency
-  m_EditorClassIdentifier: Unity.Scenes.Editor:Unity.Scenes:GlobalEntitiesDependency
+  m_EditorClassIdentifier: 
   cacheGUID:
     Value:
-      x: 678148538
-      y: 1250074456
-      z: 3945534618
-      w: 3766875499
+      x: 3483154155
+      y: 1089789340
+      z: 388320642
+      w: 326242205

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using Battle.Character;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -18,20 +19,23 @@ namespace Battle.Weapon
     public partial struct ServerBulletSystem : ISystem
     {
         private ComponentLookup<Bullet> bulletLookup;
-        private ComponentLookup<Health> healthLookup;
+        private ComponentLookup<CharacterHitBoxComponent> hitBoxLookup;
         private ComponentLookup<NetworkIdComponent> networkIdLookup;
         private ComponentLookup<GhostOwnerComponent> ghostOwnerLookup;
+        private BufferLookup<CharacterHitBoxEntityBuffer> hitBoxEntityBufferLookup;
+        private BufferLookup<PhysicsColliderKeyEntityPair> physicsColliderKeyEntityPairBufferLookup;
+        private ComponentLookup<BulletOwner> bulletOwnerLookup;
 
         public void OnCreate(ref SystemState state)
         {
-            //
-            // state.RequireForUpdate<Bullet>();
-            // bulletLookup = state.GetComponentLookup<Bullet>();
             state.RequireForUpdate<WeaponComponent>();
             bulletLookup = state.GetComponentLookup<Bullet>();
-            healthLookup = state.GetComponentLookup<Health>();
+            hitBoxLookup = state.GetComponentLookup<CharacterHitBoxComponent>();
             networkIdLookup = state.GetComponentLookup<NetworkIdComponent>(true);
             ghostOwnerLookup = state.GetComponentLookup<GhostOwnerComponent>(true);
+            hitBoxEntityBufferLookup = state.GetBufferLookup<CharacterHitBoxEntityBuffer>(true);
+            physicsColliderKeyEntityPairBufferLookup = state.GetBufferLookup<PhysicsColliderKeyEntityPair>(true);
+            bulletOwnerLookup = state.GetComponentLookup<BulletOwner>(true);
         }
 
         public void OnDestroy(ref SystemState state)
@@ -44,12 +48,15 @@ namespace Battle.Weapon
             state.Dependency.Complete();
             var commandBuffer = SystemAPI.GetSingletonRW<PostPredictionPreTransformsECBSystem.Singleton>().ValueRW
                 .CreateCommandBuffer(state.WorldUnmanaged);
-
+            
             
             bulletLookup.Update(ref state);
-            healthLookup.Update(ref state);
+            hitBoxLookup.Update(ref state);
             networkIdLookup.Update(ref state);
             ghostOwnerLookup.Update(ref state);
+            hitBoxEntityBufferLookup.Update(ref state);
+            physicsColliderKeyEntityPairBufferLookup.Update(ref state);
+            bulletOwnerLookup.Update(ref state);
             
             //Spawn Bullet
             var bulletSpawningJob = new BulletSpawningJob
@@ -75,8 +82,8 @@ namespace Battle.Weapon
                 DeltaTime = state.WorldUnmanaged.Time.DeltaTime,
                 IsServer = isServer,
             };
+            // bulletLifeTimeHandler.Schedule(state.Dependency).Complete();
             bulletLifeTimeHandler.Schedule(state.Dependency).Complete();
-
             
             //Handle Bullet Collision
             new BulletCollisionEventHandle
@@ -84,7 +91,10 @@ namespace Battle.Weapon
                 commandBuffer = SystemAPI.GetSingletonRW<PostPredictionPreTransformsECBSystem.Singleton>().ValueRW
                     .CreateCommandBuffer(state.WorldUnmanaged),
                 bulletLookup = bulletLookup,
-                healthLookup = healthLookup,
+                hitBoxLookup = hitBoxLookup,
+                hitBoxEntityBufferLookup = hitBoxEntityBufferLookup,
+                physicsColliderKeyEntityPairBufferLookup = physicsColliderKeyEntityPairBufferLookup,
+                bulletOwnerLookup = bulletOwnerLookup,
                 IsServer = isServer,
             }.Schedule(SystemAPI.GetSingleton<SimulationSingleton>(), state.Dependency).Complete();
             
@@ -166,39 +176,162 @@ namespace Battle.Weapon
         
         
         [BurstCompile]
-        public struct BulletCollisionEventHandle : ICollisionEventsJob
+        public struct BulletCollisionEventHandle : ITriggerEventsJob
         {
             public EntityCommandBuffer commandBuffer;
             public ComponentLookup<Bullet> bulletLookup;
-            public ComponentLookup<Health> healthLookup;
+            [Unity.Collections.ReadOnly]
+            public ComponentLookup<BulletOwner> bulletOwnerLookup;
+            public ComponentLookup<CharacterHitBoxComponent> hitBoxLookup;
+            public BufferLookup<CharacterHitBoxEntityBuffer> hitBoxEntityBufferLookup;
+            public BufferLookup<PhysicsColliderKeyEntityPair> physicsColliderKeyEntityPairBufferLookup;
             // public ComponentLookup<FirstPersonPlayer> firstPersonPlayerLookup;
             // public ComponentLookup<FirstPersonCharacterComponent> firstPersonCharacterLookup;
             public bool IsServer;
 
-            public void Execute(CollisionEvent collisionEvent)
+            // public void Execute(CollisionEvent collisionEvent)
+            // {
+            //     
+            //     if (bulletLookup.TryGetComponent(collisionEvent.EntityA, out var bullet))
+            //     {
+            //         if (IsServer)
+            //         {
+            //             if (hitBoxEntityBufferLookup.TryGetBuffer(collisionEvent.EntityB, out var hitBoxEntityBuffers))
+            //             {
+            //                 if (physicsColliderKeyEntityPairBufferLookup.TryGetBuffer(collisionEvent.EntityB, 
+            //                         out var physicsColliderKeyEntityPairBuffers))
+            //                 {
+            //                     foreach (var keyEntityPair in physicsColliderKeyEntityPairBuffers)
+            //                     {
+            //                         if (keyEntityPair.Key.Value == collisionEvent.ColliderKeyB)
+            //                         {
+            //                             if (hitBoxLookup.TryGetComponent(keyEntityPair.Entity, out var hitBox))
+            //                             {
+            //                                 var bulletOwner = bulletOwnerLookup[collisionEvent.EntityA];
+            //                                 commandBuffer.AddComponent(collisionEvent.EntityB, new BulletDamageCleanUp
+            //                                 {
+            //                                     DamageCaused = bullet.Damage,
+            //                                     DamageMultiplier = hitBox.DamageMultiplier,
+            //                                     CausedByCharacter = bulletOwner.OwnerCharacter,
+            //                                     CausedByPlayer = bulletOwner.OwnerPlayer,
+            //                                     CausedByWeapon = bulletOwner.OwnerWeapon,
+            //                                     DamagedCharacter = collisionEvent.EntityB
+            //                                 });
+            //                             }
+            //                             break;
+            //                         }
+            //                     }
+            //                 }
+            //             }
+            //             
+            //             commandBuffer.DestroyEntity(collisionEvent.EntityA);
+            //         }
+            //     }
+            //     else if (bulletLookup.TryGetComponent(collisionEvent.EntityB, out var bullet1))
+            //     {
+            //         if (IsServer)
+            //         {
+            //             if (hitBoxEntityBufferLookup.TryGetBuffer(collisionEvent.EntityA, out var hitBoxBuffer))
+            //             {
+            //                 if (physicsColliderKeyEntityPairBufferLookup.TryGetBuffer(collisionEvent.EntityA,
+            //                         out var physicsColliderKeyEntityPairBuffers))
+            //                 {
+            //                     foreach (var keyEntityPair in physicsColliderKeyEntityPairBuffers)
+            //                     {
+            //                         if (keyEntityPair.Key.Value == collisionEvent.ColliderKeyA)
+            //                         {
+            //                             if (hitBoxLookup.TryGetComponent(keyEntityPair.Entity, out var hitBox))
+            //                             {
+            //                                 var bulletOwner = bulletOwnerLookup[collisionEvent.EntityB];
+            //                                 commandBuffer.AddComponent(collisionEvent.EntityA, new BulletDamageCleanUp
+            //                                 {
+            //                                     DamageCaused = bullet.Damage,
+            //                                     DamageMultiplier = hitBox.DamageMultiplier,
+            //                                     CausedByCharacter = bulletOwner.OwnerCharacter,
+            //                                     CausedByPlayer = bulletOwner.OwnerPlayer,
+            //                                     CausedByWeapon = bulletOwner.OwnerWeapon,
+            //                                     DamagedCharacter = collisionEvent.EntityA
+            //                                 });
+            //                             }
+            //                             break;
+            //                         }
+            //                     }
+            //                 }
+            //             }
+            //             commandBuffer.DestroyEntity(collisionEvent.EntityB);
+            //         }
+            //     }
+            // }
+
+            public void Execute(TriggerEvent triggerEvent)
             {
-                if (bulletLookup.TryGetComponent(collisionEvent.EntityA, out var bullet))
+                if (bulletLookup.TryGetComponent(triggerEvent.EntityA, out var bullet))
                 {
                     if (IsServer)
                     {
-                        if (healthLookup.TryGetComponent(collisionEvent.EntityB, out var health))
+                        if (hitBoxEntityBufferLookup.TryGetBuffer(triggerEvent.EntityB, out var hitBoxEntityBuffers))
                         {
-                            health.CurrentHealth -= bullet.Damage;
-                            healthLookup[collisionEvent.EntityB] = health;
+                            if (physicsColliderKeyEntityPairBufferLookup.TryGetBuffer(triggerEvent.EntityB, 
+                                    out var physicsColliderKeyEntityPairBuffers))
+                            {
+                                foreach (var keyEntityPair in physicsColliderKeyEntityPairBuffers)
+                                {
+                                    if (keyEntityPair.Key.Value == triggerEvent.ColliderKeyB)
+                                    {
+                                        if (hitBoxLookup.TryGetComponent(keyEntityPair.Entity, out var hitBox))
+                                        {
+                                            var bulletOwner = bulletOwnerLookup[triggerEvent.EntityA];
+                                            commandBuffer.AddComponent(triggerEvent.EntityB, new BulletDamageCleanUp
+                                            {
+                                                DamageCaused = bullet.Damage,
+                                                DamageMultiplier = hitBox.DamageMultiplier,
+                                                CausedByCharacter = bulletOwner.OwnerCharacter,
+                                                CausedByPlayer = bulletOwner.OwnerPlayer,
+                                                CausedByWeapon = bulletOwner.OwnerWeapon,
+                                                DamagedCharacter = triggerEvent.EntityB
+                                            });
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
                         }
-                        commandBuffer.DestroyEntity(collisionEvent.EntityA);
+                        
+                        commandBuffer.DestroyEntity(triggerEvent.EntityA);
                     }
                 }
-                else if (bulletLookup.TryGetComponent(collisionEvent.EntityB, out var bullet1))
+                else if (bulletLookup.TryGetComponent(triggerEvent.EntityB, out var bullet1))
                 {
                     if (IsServer)
                     {
-                        if (healthLookup.TryGetComponent(collisionEvent.EntityA, out var health))
+                        if (hitBoxEntityBufferLookup.TryGetBuffer(triggerEvent.EntityA, out var hitBoxBuffer))
                         {
-                            health.CurrentHealth -= bullet1.Damage;
-                            healthLookup[collisionEvent.EntityA] = health;
+                            if (physicsColliderKeyEntityPairBufferLookup.TryGetBuffer(triggerEvent.EntityA,
+                                    out var physicsColliderKeyEntityPairBuffers))
+                            {
+                                foreach (var keyEntityPair in physicsColliderKeyEntityPairBuffers)
+                                {
+                                    if (keyEntityPair.Key.Value == triggerEvent.ColliderKeyA)
+                                    {
+                                        if (hitBoxLookup.TryGetComponent(keyEntityPair.Entity, out var hitBox))
+                                        {
+                                            var bulletOwner = bulletOwnerLookup[triggerEvent.EntityB];
+                                            commandBuffer.AddComponent(triggerEvent.EntityA, new BulletDamageCleanUp
+                                            {
+                                                DamageCaused = bullet.Damage,
+                                                DamageMultiplier = hitBox.DamageMultiplier,
+                                                CausedByCharacter = bulletOwner.OwnerCharacter,
+                                                CausedByPlayer = bulletOwner.OwnerPlayer,
+                                                CausedByWeapon = bulletOwner.OwnerWeapon,
+                                                DamagedCharacter = triggerEvent.EntityA
+                                            });
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
                         }
-                        commandBuffer.DestroyEntity(collisionEvent.EntityB);
+                        commandBuffer.DestroyEntity(triggerEvent.EntityB);
                     }
                 }
             }

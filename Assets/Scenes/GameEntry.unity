@@ -248,6 +248,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   recoilConfig: {fileID: 11400000, guid: 1557e0b78fc695a488973d09e717098a, type: 2}
+  spreadConfig: {fileID: 0}
 --- !u!1 &1100182391
 GameObject:
   m_ObjectHideFlags: 0

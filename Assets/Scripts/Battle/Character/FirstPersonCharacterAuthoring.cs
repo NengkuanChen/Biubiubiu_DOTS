@@ -5,6 +5,7 @@ using UnityEngine;
 using Rival;
 using Unity.Physics;
 using System.Collections.Generic;
+using Battle.Character;
 using Battle.Weapon;
 using UnityEngine.Serialization;
 
@@ -20,6 +21,7 @@ public class FirstPersonCharacterAuthoring : MonoBehaviour
     public GameObject DeathVFXSpawnPoint;
     public AuthoringKinematicCharacterProperties CharacterProperties = AuthoringKinematicCharacterProperties.GetDefault();
     public FirstPersonCharacterComponent Character = FirstPersonCharacterComponent.GetDefault();
+    public List<GameObject> CharacterHitBoxes = new List<GameObject>();
 
     public class Baker : Baker<FirstPersonCharacterAuthoring>
     {
@@ -39,6 +41,12 @@ public class FirstPersonCharacterAuthoring : MonoBehaviour
             AddComponent(new OwningPlayer());
             
             AddComponent(new ActiveWeaponComponent());
+            AddBuffer<CharacterHitBoxEntityBuffer>();
+            for (int i = 0; i < authoring.CharacterHitBoxes.Count; i++)
+            {
+                AppendToBuffer(new CharacterHitBoxEntityBuffer { HitBoxEntity = GetEntity(authoring.CharacterHitBoxes[i]) });
+            }
+            
         }
     }
 }

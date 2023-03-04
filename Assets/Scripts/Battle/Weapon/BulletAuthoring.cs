@@ -1,4 +1,5 @@
 ﻿using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace Battle.Weapon
@@ -16,6 +17,37 @@ namespace Battle.Weapon
         public Entity OwnerCharacter;
         public int OwnerID;
     }
+    
+    public struct BulletServerCleanUp : ICleanupComponentData
+    {
+        
+    }
+    
+    public struct BulletDamageCleanUp : ICleanupComponentData
+    {
+        public Entity CausedByWeapon;
+        public Entity CausedByPlayer;
+        public Entity CausedByCharacter;
+        public float DamageCaused;
+        public float DamageMultiplier;
+        public Entity DamagedCharacter;
+    }
+    
+    
+    
+    public struct BulletClientCleanUp : ICleanupComponentData
+    {
+        public Entity BulletHitVfx;
+        public float3 HitPosition;
+        public float3 HitNormal;
+        
+    }
+    
+    public struct BulletVisualCleanUp : ICleanupComponentData
+    {
+        
+    }
+    
     
     public class BulletAuthoring : MonoBehaviour
     {
