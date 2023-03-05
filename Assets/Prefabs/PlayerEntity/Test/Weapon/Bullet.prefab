@@ -120,7 +120,7 @@ MonoBehaviour:
   prefabId: 072b0b195859a8046b5d99da599b79ba
   HasOwner: 1
   SupportAutoCommandTarget: 1
-  TrackInterpolationDelay: 0
+  TrackInterpolationDelay: 1
   GhostGroup: 0
   UsePreSerialization: 0
 --- !u!114 &-3051069801197173269
@@ -217,7 +217,7 @@ MonoBehaviour:
   m_PrimitiveCenter:
     x: 0
     y: 0
-    z: 0
+    z: -0.02
   m_PrimitiveSize:
     x: 0.05
     y: 0.05

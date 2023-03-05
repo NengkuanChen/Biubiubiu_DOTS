@@ -73,8 +73,8 @@ GameObject:
   - component: {fileID: 1555240848202863129}
   - component: {fileID: 1555240848202863135}
   - component: {fileID: 1555240848202863128}
-  - component: {fileID: 4660012157415070687}
   - component: {fileID: 7590032914074888886}
+  - component: {fileID: 7595954323678655887}
   m_Layer: 0
   m_Name: Capsule
   m_TagString: Untagged
@@ -122,7 +122,7 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
-  m_RenderingLayerMask: 257
+  m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
   - {fileID: -3033667219593020291, guid: eaa6c47361520974cb9ad5cd3991f5ee, type: 3}
@@ -147,7 +147,20 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &4660012157415070687
+--- !u!114 &7590032914074888886
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1555240848202863130}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 65f5b37e5d0e4e699fb3d74e0e5efbeb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  damageMultiplier: 1
+--- !u!114 &7595954323678655887
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -196,7 +209,7 @@ MonoBehaviour:
     m_Template: {fileID: 0}
     m_CollisionResponse:
       m_Override: 0
-      m_Value: 1
+      m_Value: 0
     m_Friction:
       m_Override: 0
       m_Value:
@@ -290,19 +303,6 @@ MonoBehaviour:
         Tag07: 0
     m_SerializedVersion: 1
   m_SerializedVersion: 1
---- !u!114 &7590032914074888886
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1555240848202863130}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 65f5b37e5d0e4e699fb3d74e0e5efbeb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  damageMultiplier: 1
 --- !u!1 &1555240849038293811
 GameObject:
   m_ObjectHideFlags: 0
@@ -337,8 +337,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1555240848202863129}
   - {fileID: 7651177745963658522}
+  - {fileID: 1555240848202863129}
   - {fileID: 6401532902016766949}
   - {fileID: 397833574}
   - {fileID: 5666159840651448919}
@@ -455,7 +455,7 @@ MonoBehaviour:
         Category09: 1
         Category10: 1
         Category11: 1
-        Category12: 1
+        Category12: 0
         Category13: 1
         Category14: 1
         Category15: 1
@@ -739,7 +739,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b275e5f92732148048d7b77e264ac30e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_ShapeType: 1
+  m_ShapeType: 2
   m_PrimitiveCenter:
     x: 0
     y: 0
@@ -776,7 +776,7 @@ MonoBehaviour:
     m_Template: {fileID: 0}
     m_CollisionResponse:
       m_Override: 0
-      m_Value: 1
+      m_Value: 0
     m_Friction:
       m_Override: 0
       m_Value:

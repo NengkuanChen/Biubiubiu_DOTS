@@ -53,12 +53,14 @@ namespace Battle.Weapon
             public void Execute(Entity entity, [ChunkIndexInQuery] int chunkIndexInQuery, ref BulletDamageCleanUp bulletDamage)
             {
                 var damage = bulletDamage.DamageCaused * bulletDamage.DamageMultiplier;
+                // Debug.Log($"Bullet Damage : {bulletDamage.DamageCaused}, Damage Multiplier : {bulletDamage.DamageMultiplier}");
                 var damagedCharacter = bulletDamage.DamagedCharacter;
                 if (HealthLookup.TryGetComponent(damagedCharacter, out Health health))
                 {
                     health.CurrentHealth -= damage;
                     EntityCommandBufferParallelWriter.SetComponent(chunkIndexInQuery, damagedCharacter, health);
                     EntityCommandBufferParallelWriter.RemoveComponent<BulletDamageCleanUp>(chunkIndexInQuery, entity);
+                    Debug.Log($"damaged character {damagedCharacter.Index} for {damage} damage, health is now {health.CurrentHealth}");
                 }
             }
         }

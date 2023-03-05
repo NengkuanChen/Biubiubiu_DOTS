@@ -1,6 +1,7 @@
 ﻿using System;
 using Unity.Entities;
 using Unity.NetCode;
+using UnityEngine;
 
 namespace Game
 {
@@ -12,7 +13,9 @@ namespace Game
             var sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             // AutoConnectPort = 7979;
             AutoConnectPort = 0;
-            
+#if UNITY_EDITOR
+            Application.runInBackground = true;
+#endif
             CreateLocalWorld(defaultWorldName);
             return true;
         }
