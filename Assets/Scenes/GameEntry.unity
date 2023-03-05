@@ -244,11 +244,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1004088434}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 733ae2dcdff6421aa0ec28a0cf0b1436, type: 3}
+  m_Script: {fileID: 11500000, guid: 3df4a2d30b5343ce9fe7a7fb86e9b21c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  recoilConfig: {fileID: 11400000, guid: 1557e0b78fc695a488973d09e717098a, type: 2}
-  spreadConfig: {fileID: 0}
 --- !u!1 &1100182391
 GameObject:
   m_ObjectHideFlags: 0

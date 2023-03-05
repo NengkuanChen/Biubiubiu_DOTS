@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: SpreadConfig
   m_EditorClassIdentifier: 
   spreadTypes:
-  - MaxSpreadRadius: 3
-    MinSpreadRadius: 0
+  - MaxSpreadAngle: 35
+    MinSpreadAngle: 0
     SpreadCurve:
       serializedVersion: 2
       m_Curve:
@@ -39,4 +39,5 @@ MonoBehaviour:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    MaxSpreadRecoveryTime: 2
+    MaxSpreadRecoveryTime: 1
+    SpreadToMaxTime: 6

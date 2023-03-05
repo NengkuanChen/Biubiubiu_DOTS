@@ -1,8 +1,10 @@
-﻿using Unity.Burst;
+﻿using Rival;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.NetCode;
+using Unity.Physics;
 using Unity.Physics.Systems;
 using Unity.Transforms;
 
@@ -28,6 +30,8 @@ namespace Battle.Weapon
         private ComponentLookup<LocalToWorld> localToWorldLookup;
 
         private ComponentLookup<FirstPersonCharacterComponent> characterComponentLookup;
+        
+        private BufferLookup<SpreadInfoBuffer> spreadInfoBufferLookup;
 
         public void OnCreate(ref SystemState state)
         {
@@ -35,6 +39,7 @@ namespace Battle.Weapon
             state.RequireForUpdate<WeaponOwnerComponent>();
             localToWorldLookup = state.GetComponentLookup<LocalToWorld>(true);
             characterComponentLookup = state.GetComponentLookup<FirstPersonCharacterComponent>(true);
+            spreadInfoBufferLookup = state.GetBufferLookup<SpreadInfoBuffer>();
         }
 
         public void OnDestroy(ref SystemState state)
@@ -42,13 +47,14 @@ namespace Battle.Weapon
             
         }
 
-        [BurstCompile]
+        // [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             var commandBuffer = SystemAPI.GetSingletonRW<PostPredictionPreTransformsECBSystem.Singleton>().ValueRW
                 .CreateCommandBuffer(state.WorldUnmanaged);
             characterComponentLookup.Update(ref state);
             localToWorldLookup.Update(ref state);
+            spreadInfoBufferLookup.Update(ref state);
             WeaponFiringRegistrationJob registrationJob = new WeaponFiringRegistrationJob
             {
                 DeltaTime = SystemAPI.Time.DeltaTime
@@ -63,13 +69,45 @@ namespace Battle.Weapon
             state.Dependency = magazineHandlingJob.ScheduleParallel(state.Dependency);
             state.Dependency.Complete();
             
+            
+            // WeaponSpreadJob spreadJob = new WeaponSpreadJob()
+            // {
+            //     DeltaTime = SystemAPI.Time.DeltaTime
+            // };
+            // spreadJob.ScheduleParallel(state.Dependency).Complete();
+            foreach (var ( weaponFiringComponent, spreadComponent,
+                         spreadInfoBuffer,
+                         entity) in SystemAPI.Query<RefRW<WeaponFiringComponent>, 
+                         RefRW<WeaponSpreadComponent>, DynamicBuffer<SpreadInfoBuffer>>().WithEntityAccess())
+            {
+                // spreadInfoBufferLookup.TryGetBuffer(entity, out DynamicBuffer<SpreadInfoBuffer> spreadInfoBuffer);
+                spreadInfoBuffer.Clear();
+                for (int i = 0; i < weaponFiringComponent.ValueRW.TickBulletsCounter; i++)
+                {
+                    WeaponUtility.ComputeSpread(ref spreadComponent.ValueRW, out float spreadX, out float spreadY);
+                    spreadInfoBuffer.Add(new SpreadInfoBuffer
+                    {
+                        SpreadAngleRotX = spreadX,  
+                        SpreadAngleRotZ = spreadY
+                    });
+                }
+
+                WeaponUtility.GetSpreadDecreaseRate(spreadComponent.ValueRW.SpreadTypeIndex, out var decreaseRate);
+                spreadComponent.ValueRW.SpreadPercentage -=
+                    SystemAPI.Time.DeltaTime * decreaseRate;
+                spreadComponent.ValueRW.SpreadPercentage = math.clamp(spreadComponent.ValueRW.SpreadPercentage, 0, 1);
+            }
+            
+            
+            
             WeaponBulletSpawningRequestJob bulletSpawningRequestJob = new WeaponBulletSpawningRequestJob
             {
                 DeltaTime = SystemAPI.Time.DeltaTime,
                 CommandBuffer = commandBuffer.AsParallelWriter(),
                 LocalToWorldLookup = localToWorldLookup,
                 CharacterComponentLookUp = characterComponentLookup,
-                IsServer = state.WorldUnmanaged.IsServer()
+                IsServer = state.WorldUnmanaged.IsServer(),
+                SpreadInfoBufferLookup = spreadInfoBufferLookup
             };
             state.Dependency = bulletSpawningRequestJob.ScheduleParallel(state.Dependency);
             state.Dependency.Complete();
@@ -165,7 +203,7 @@ namespace Battle.Weapon
 
                 
             }
-            
+
             private void Reload(Entity entity, ref WeaponMagazineComponent magazine, ref WeaponReloadComponent reloadComponent)
             {
                 reloadComponent.IsReloading = true;
@@ -179,6 +217,33 @@ namespace Battle.Weapon
             }
         }
         
+        
+        [BurstCompile]
+        public partial struct WeaponSpreadJob : IJobEntity
+        {
+            public float DeltaTime;
+                
+            void Execute(Entity entity, ref WeaponFiringComponent weaponFiringComponent,
+                ref WeaponSpreadComponent spreadComponent, ref DynamicBuffer<SpreadInfoBuffer> spreadInfoBuffer)
+            {
+                // spreadInfoBuffer.Clear();
+                // for (int i = 0; i < weaponFiringComponent.TickBulletsCounter; i++)
+                // {
+                //     WeaponUtility.CompoteSpread(ref spreadComponent, out float spreadX, out float spreadY);
+                //     spreadInfoBuffer.Add(new SpreadInfoBuffer
+                //     {
+                //         SpreadAngleRotX = spreadX,
+                //         SpreadAngleRotZ = spreadY
+                //     });
+                // }
+                //
+                // spreadComponent.SpreadPercentage -=
+                //     DeltaTime * WeaponUtility.GetSpreadDecreaseRate(spreadComponent.SpreadTypeIndex);
+                // spreadComponent.SpreadPercentage = math.clamp(spreadComponent.SpreadPercentage, 0, 1);
+            }
+        }
+        
+        
         [BurstCompile]
         public partial struct WeaponBulletSpawningRequestJob : IJobEntity
         {
@@ -191,6 +256,9 @@ namespace Battle.Weapon
             [ReadOnly] 
             public ComponentLookup<FirstPersonCharacterComponent> CharacterComponentLookUp;
             
+            [ReadOnly]
+            public BufferLookup<SpreadInfoBuffer> SpreadInfoBufferLookup;
+
             public EntityCommandBuffer.ParallelWriter CommandBuffer;
             
             [ReadOnly]
@@ -212,6 +280,14 @@ namespace Battle.Weapon
                     var ownerMuzzleRotation = LocalToWorldLookup[weaponComponent.MuzzleSocket].Rotation;
                     for (int i = 0; i < weaponFiringComponent.TickBulletsCounter; i++)
                     {
+                        var spreadX = 0f;
+                        var spreadZ = 0f;
+                        if (SpreadInfoBufferLookup.TryGetBuffer(entity, out var spreadInfoBuffer))
+                        {
+                            spreadX = spreadInfoBuffer[i].SpreadAngleRotX;
+                            spreadZ = spreadInfoBuffer[i].SpreadAngleRotZ;
+                        }
+
                         if (weaponBulletComponent.IsGhost || IsServer)
                         {
                             bulletSpawnRequestBuffer.Add(new BulletSpawnRequestBuffer
@@ -223,22 +299,52 @@ namespace Battle.Weapon
                                 Position = ownerViewPosition,
                                 Rotation = ownerViewRotation,
                                 IsGhost = weaponBulletComponent.IsGhost,
+                                SpreadAngleRotX = spreadX,
+                                SpreadAngleRotZ = spreadZ,
                             });
                         }
-                        
-                        // else if (weaponBulletComponent.BulletVisualEntity != Entity.Null)
-                        // {
-                        //     bulletSpawnVisualRequestBuffer.Add(new BulletSpawnVisualRequestBuffer
-                        //     {
-                        //         OwnerCharacter = ownerComponent.OwnerCharacter,
-                        //         OwnerPlayer = ownerComponent.OwnerPlayer,
-                        //         OwnerWeapon = entity,
-                        //         BulletVisualPrefab = weaponBulletComponent.BulletVisualEntity,
-                        //         Position = ownerMuzzlePosition,
-                        //         Rotation = ownerMuzzleRotation,
-                        //     });
-                        // }
                     }
+                }
+            }
+        }
+        
+        
+        [BurstCompile]
+        public partial struct RaycastWeaponShotJob : IJobEntity
+        {
+            [ReadOnly]
+            public bool IsServer;
+
+            [ReadOnly] 
+            public NetworkTime NetworkTime;
+            
+            [ReadOnly]
+            public PhysicsWorld PhysicsWorld;
+
+            [ReadOnly] 
+            public PhysicsWorldHistorySingleton PhysicsWorldHistory;
+            
+            [ReadOnly]
+            public ComponentLookup<LocalToWorld> LocalToWorldLookup;
+            
+            [ReadOnly]
+            public ComponentLookup<StoredKinematicCharacterData> StoredKinematicCharacterDataLookup;
+            
+            [ReadOnly]
+            public NativeList<RaycastHit> RaycastHits;
+
+
+            void Execute(Entity entity, ref RaycastWeaponComponent raycastWeaponComponent,
+                in InterpolationDelay interpolationDelay,
+                in WeaponFiringComponent weaponFiringComponent,
+                in WeaponOwnerComponent ownerComponent,
+                in WeaponComponent weaponComponent)
+            {
+                PhysicsWorldHistory.GetCollisionWorldFromTick(NetworkTime.ServerTick, interpolationDelay.Value,
+                    ref PhysicsWorld, out var collisionWorld);
+                for (int i = 0; i < weaponFiringComponent.TickBulletsCounter; i++)
+                {
+                    
                 }
             }
         }

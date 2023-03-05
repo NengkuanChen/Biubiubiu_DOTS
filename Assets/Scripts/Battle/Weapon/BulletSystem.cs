@@ -4,6 +4,7 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
+using Unity.Mathematics;
 using Unity.NetCode;
 using Unity.Physics;
 using Unity.Physics.Systems;
@@ -114,10 +115,22 @@ namespace Battle.Weapon
             {
                 for (int i = 0; i < spawnRequestBuffer.Length; i++)
                 {
+                    
                     var bullet = CommandBuffer.Instantiate(chunkIndexInQuery, spawnRequestBuffer[i].BulletPrefab);
-                    CommandBuffer.SetComponent(chunkIndexInQuery, bullet,
-                        LocalTransform.FromPositionRotation(spawnRequestBuffer[i].Position,
-                            spawnRequestBuffer[i].Rotation));
+                    var localTransform = LocalTransform.FromPositionRotation(spawnRequestBuffer[i].Position,
+                        spawnRequestBuffer[i].Rotation);
+                    //Compute Spread
+                    var forward = localTransform.Forward();
+                    var up = localTransform.Up();
+                    up = math.mul(quaternion.AxisAngle(forward, spawnRequestBuffer[i].SpreadAngleRotZ), up);
+                    localTransform.Rotation = quaternion.LookRotation(forward, up);
+                    var right = localTransform.Right();
+                    forward = localTransform.Forward();
+                    forward = math.mul(quaternion.AxisAngle(right, spawnRequestBuffer[i].SpreadAngleRotX), forward);
+                    up = localTransform.Up();
+                    up = math.mul(quaternion.AxisAngle(right, spawnRequestBuffer[i].SpreadAngleRotX), up);
+                    localTransform.Rotation = quaternion.LookRotation(forward, up);
+                    CommandBuffer.SetComponent(chunkIndexInQuery, bullet, localTransform);
                     CommandBuffer.SetComponent(chunkIndexInQuery, bullet, new BulletOwner()
                     {
                         OwnerCharacter = spawnRequestBuffer[i].OwnerCharacter,
@@ -269,8 +282,6 @@ namespace Battle.Weapon
                 {
                     return;
                 }
-                Debug.Log($"Collision A Value: {triggerEvent.EntityA.Index}");
-                Debug.Log($"Collision B Value: {triggerEvent.EntityB.Index}");
                 if (bulletLookup.TryGetComponent(triggerEvent.EntityA, out var bullet))
                 {
                     bool isSelfCollider = false;
@@ -288,7 +299,6 @@ namespace Battle.Weapon
                             {
                                 foreach (var keyEntityPair in physicsColliderKeyEntityPairBuffers)
                                 {
-                                    Debug.Log($"KeyValue: {keyEntityPair.Key.Value}");
                                     if (keyEntityPair.Key == triggerEvent.ColliderKeyB)
                                     {
                                         if (hitBoxLookup.TryGetComponent(keyEntityPair.Entity, out var hitBox))
@@ -332,7 +342,6 @@ namespace Battle.Weapon
                             {
                                 foreach (var keyEntityPair in physicsColliderKeyEntityPairBuffers)
                                 {
-                                    Debug.Log($"KeyEntityPair: {keyEntityPair.Key.Value}");
                                     if (keyEntityPair.Key == triggerEvent.ColliderKeyA)
                                     {
                                         if (hitBoxLookup.TryGetComponent(keyEntityPair.Entity, out var hitBox))

@@ -24,6 +24,8 @@ namespace Battle.Weapon
         public Entity OwnerWeapon;
         public Entity BulletPrefab;
         public bool IsGhost;
+        public float SpreadAngleRotX;
+        public float SpreadAngleRotZ;
     }
     
     

@@ -15,9 +15,10 @@ namespace Battle.Weapon
     [Serializable]
     public class SpreadType
     {
-        public float MaxSpreadRadius;
-        public float MinSpreadRadius;
+        public float MaxSpreadAngle;
+        public float MinSpreadAngle;
         public AnimationCurve SpreadCurve;
-        public float MaxSpreadRecoveryTime;
+        public float SpreadPercetageIncreasePerShot;
+        public float SpreadPercentageDecreasePerSecond;
     }
 }

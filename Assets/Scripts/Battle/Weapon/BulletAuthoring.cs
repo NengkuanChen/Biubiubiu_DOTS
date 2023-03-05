@@ -35,17 +35,12 @@ namespace Battle.Weapon
     
     
     
-    public struct BulletClientCleanUp : ICleanupComponentData
-    {
-        public Entity BulletHitVfx;
-        public float3 HitPosition;
-        public float3 HitNormal;
-        
-    }
     
     public struct BulletVisualCleanUp : ICleanupComponentData
     {
-        
+        public Entity HitVfx;
+        public float3 HitPosition;
+        public float3 HitNormal;
     }
     
     

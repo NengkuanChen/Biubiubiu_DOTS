@@ -339,8 +339,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8055b01bab564b7cad4521cd29ceb307, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  viewModelPrefab: {fileID: -7433563274941044954, guid: b3cbdf2d81861ae4ea79a50eee7cb266,
-    type: 3}
 --- !u!114 &1439551603
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -353,8 +351,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 845ab43298064822b99e82ba2840e6b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  currentViewModel: {fileID: -7433563274941044954, guid: b3cbdf2d81861ae4ea79a50eee7cb266,
-    type: 3}
 --- !u!1 &1469248265
 GameObject:
   m_ObjectHideFlags: 0

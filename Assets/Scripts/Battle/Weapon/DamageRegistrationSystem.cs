@@ -65,5 +65,16 @@ namespace Battle.Weapon
             }
         }
     }
-    
+
+
+
+    public struct DamageInfoRPC : IRpcCommand
+    {
+        public int DamagedPlayerId;
+        public int DamageFromPlayerId;
+        public int WeaponId;
+        
+        public float DamageCaused;
+        public float DamageMultiplier;
+    }
 }
