@@ -120,16 +120,8 @@ namespace Battle.Weapon
                     var localTransform = LocalTransform.FromPositionRotation(spawnRequestBuffer[i].Position,
                         spawnRequestBuffer[i].Rotation);
                     //Compute Spread
-                    var forward = localTransform.Forward();
-                    var up = localTransform.Up();
-                    up = math.mul(quaternion.AxisAngle(forward, spawnRequestBuffer[i].SpreadAngleRotZ), up);
-                    localTransform.Rotation = quaternion.LookRotation(forward, up);
-                    var right = localTransform.Right();
-                    forward = localTransform.Forward();
-                    forward = math.mul(quaternion.AxisAngle(right, spawnRequestBuffer[i].SpreadAngleRotX), forward);
-                    up = localTransform.Up();
-                    up = math.mul(quaternion.AxisAngle(right, spawnRequestBuffer[i].SpreadAngleRotX), up);
-                    localTransform.Rotation = quaternion.LookRotation(forward, up);
+                    WeaponUtility.ComputeBulletRotation(ref localTransform, spawnRequestBuffer[i].SpreadAngleRotX,
+                        spawnRequestBuffer[i].SpreadAngleRotZ);
                     CommandBuffer.SetComponent(chunkIndexInQuery, bullet, localTransform);
                     CommandBuffer.SetComponent(chunkIndexInQuery, bullet, new BulletOwner()
                     {

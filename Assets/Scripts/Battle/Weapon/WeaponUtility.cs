@@ -41,6 +41,20 @@ namespace Battle.Weapon
         {
             spreadPercentageDecreasePerSecond = GameGlobalConfigs.SpreadConfig.SpreadTypes[spreadTypeIndex].SpreadPercentageDecreasePerSecond;
         }
+        
+        public static void ComputeBulletRotation(ref LocalTransform localTransform, float spreadAngleRotX, float spreadAngleRotZ)
+        {
+            var forward = localTransform.Forward();
+            var up = localTransform.Up();
+            up = math.mul(quaternion.AxisAngle(forward, spreadAngleRotZ), up);
+            localTransform.Rotation = quaternion.LookRotation(forward, up);
+            var right = localTransform.Right();
+            forward = localTransform.Forward();
+            forward = math.mul(quaternion.AxisAngle(right, spreadAngleRotX), forward);
+            up = localTransform.Up();
+            up = math.mul(quaternion.AxisAngle(right, spreadAngleRotX), up);
+            localTransform.Rotation = quaternion.LookRotation(forward, up);
+        }
 
 
     }
