@@ -18,9 +18,6 @@ namespace Battle.Weapon
         public LocalTransform LocalTransform;
         public float3 HitPosition;
         public bool IsHit;
-        public Entity OwnerCharacter;
-        public Entity OwnerWeapon;
-        public Entity OwnerPlayer;
         public Entity BulletVisualPrefab;
     }
 

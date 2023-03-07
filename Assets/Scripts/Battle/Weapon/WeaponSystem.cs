@@ -44,6 +44,8 @@ namespace Battle.Weapon
         private BufferLookup<PhysicsColliderKeyEntityPair> physicsColliderKeyEntityPair;
 
         private ComponentLookup<CharacterHitBoxComponent> characterHitBoxComponentLookup;
+        
+        private BufferLookup<BulletSpawnVisualRequestBuffer> bulletSpawnVisualRequestBufferLookup;
 
         private NativeList<RaycastHit> hits;
 
@@ -57,6 +59,7 @@ namespace Battle.Weapon
             storedKinematicCharacterDataLookup = state.GetComponentLookup<StoredKinematicCharacterData>(true);
             physicsColliderKeyEntityPair = state.GetBufferLookup<PhysicsColliderKeyEntityPair>();
             characterHitBoxComponentLookup = state.GetComponentLookup<CharacterHitBoxComponent>(true);
+            bulletSpawnVisualRequestBufferLookup = state.GetBufferLookup<BulletSpawnVisualRequestBuffer>();
             hits = new NativeList<RaycastHit>(Allocator.Persistent);
         }
 
@@ -74,7 +77,9 @@ namespace Battle.Weapon
             localToWorldLookup.Update(ref state);
             spreadInfoBufferLookup.Update(ref state);
             characterHitBoxComponentLookup.Update(ref state);
+            bulletSpawnVisualRequestBufferLookup.Update(ref state);
             storedKinematicCharacterDataLookup.Update(ref state);
+            physicsColliderKeyEntityPair.Update(ref state);
             WeaponFiringRegistrationJob registrationJob = new WeaponFiringRegistrationJob
             {
                 DeltaTime = SystemAPI.Time.DeltaTime
@@ -138,6 +143,7 @@ namespace Battle.Weapon
                 SystemAPI.GetSingleton<PhysicsWorldHistorySingleton>(), localToWorldLookup,
                 storedKinematicCharacterDataLookup,
                 characterComponentLookup, characterHitBoxComponentLookup, physicsColliderKeyEntityPair,
+                bulletSpawnVisualRequestBufferLookup,
                 ref hits, commandBuffer, ref state);
         }
 
@@ -344,17 +350,18 @@ namespace Battle.Weapon
             in ComponentLookup<FirstPersonCharacterComponent> characterComponentLookUp,
             in ComponentLookup<CharacterHitBoxComponent> characterHitBoxComponentLookUp,
             in BufferLookup<PhysicsColliderKeyEntityPair> physicsColliderKeyEntityPairBufferLookup,
+            in BufferLookup<BulletSpawnVisualRequestBuffer> bulletSpawnVisualRequestBufferLookup,
             ref NativeList<RaycastHit> raycastHits, EntityCommandBuffer commandBuffer,
             ref SystemState state)
         {
             foreach (var (raycastWeaponComponent, ownerComponent,
                          weaponComponent, spreadComponent,
                          bulletVisualComponent, interpolationDelay,
-                         weaponFiringComponent)
+                         weaponFiringComponent, entity)
                      in SystemAPI.Query<RefRW<RaycastWeaponComponent>,
                          RefRW<WeaponOwnerComponent>, RefRW<WeaponComponent>,
                          RefRW<WeaponSpreadComponent>, RefRW<WeaponBulletVisualComponent>,
-                         RefRW<InterpolationDelay>, RefRW<WeaponFiringComponent>>())
+                         RefRW<InterpolationDelay>, RefRW<WeaponFiringComponent>>().WithEntityAccess())
             {
                 physicsWorldHistory.GetCollisionWorldFromTick(networkTime.ServerTick, interpolationDelay.ValueRO.Value,
                     ref physicsWorld, out var collisionWorld);
@@ -372,10 +379,30 @@ namespace Battle.Weapon
                         ref raycastHits,
                         out bool hitFound,
                         out RaycastHit closetValidHit, out BulletSpawnVisualRequestBuffer visualRequestBuffer,
-                        out float damageMultiplier);
+                        out float damageMultiplier, out Entity hitCharacter);
+                    if (!isServer)
+                    {
+                        bulletSpawnVisualRequestBufferLookup[entity].Add(visualRequestBuffer);
+                    }
+                    else if (hitCharacter != Entity.Null)
+                    {
+                        var damageInfo = commandBuffer.CreateEntity();
+                        commandBuffer.AddComponent(damageInfo, new BulletDamageCleanUp
+                        {
+                            CausedByPlayer = ownerComponent.ValueRW.OwnerPlayer,
+                            CausedByCharacter = ownerComponent.ValueRW.OwnerCharacter,
+                            DamagedCharacter = hitCharacter,
+                            CausedByWeapon = entity,
+                            DamageCaused = raycastWeaponComponent.ValueRW.Damage,
+                            DamageMultiplier = damageMultiplier,
+                        });
+                        commandBuffer.DestroyEntity(damageInfo);
+                    }
+                    
                     // bulletSpawnVisualRequestBuffer.Add(visualRequestBuffer);
                     Debug.Log(
                         $"Hit found: {hitFound}, Distance: {closetValidHit.Fraction * raycastWeaponComponent.ValueRW.MaxRange}");
+                    
                 }
             }
         }

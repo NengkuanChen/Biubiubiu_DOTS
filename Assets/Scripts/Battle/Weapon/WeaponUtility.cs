@@ -35,12 +35,14 @@ namespace Battle.Weapon
             out bool hitFound,
             out RaycastHit closetValidHit,
             out BulletSpawnVisualRequestBuffer visualRequestBuffer,
-            out float damageMultiplier
+            out float damageMultiplier,
+            out Entity damagedCharacter
             )
         {
             hitFound = false;
             closetValidHit = default; 
-            visualRequestBuffer = default; ;
+            visualRequestBuffer = default; 
+            damagedCharacter = Entity.Null;
             LocalToWorld shotLtW = localToWorldLookup[shotOrigin];
             LocalToWorld muzzleLtW = localToWorldLookup[muzzleEntity];
             visualRequestBuffer.BulletVisualPrefab = weaponBulletVisualComponent.BulletVisualEntity;
@@ -63,7 +65,7 @@ namespace Battle.Weapon
             collisionWorld.CastRay(raycastInput, ref hits);
             hitFound = GetClosestValidRaycastHit(in hits, in StoredKinematicCharacterDataLookup,
                 in physicsColliderKeyEntityPair, in hitBoxComponentLookup,  in weaponOwnerComponent,
-                out closetValidHit, out damageMultiplier);
+                out closetValidHit, out damageMultiplier, out damagedCharacter);
             if (hitFound)
             {
                 visualRequestBuffer.HitPosition = closetValidHit.Position;
@@ -80,12 +82,14 @@ namespace Battle.Weapon
             in ComponentLookup<CharacterHitBoxComponent> hitBoxComponentLookup,
             in WeaponOwnerComponent weaponOwnerComponent,
             out RaycastHit closestValidHit,
-            out float damageMultiplier)
+            out float damageMultiplier,
+            out Entity hitCharacter)
         {
             closestValidHit = default;
             closestValidHit.Fraction = float.MaxValue;
             damageMultiplier = 0f;
             bool hitFound = false;
+            hitCharacter = Entity.Null;
             for (int i = 0; i < hits.Length; i++)
             {
                 RaycastHit tmpHit = hits[i];
@@ -108,6 +112,7 @@ namespace Battle.Weapon
                                         .DamageMultiplier;
                                     hitFound = true;
                                     closestValidHit = tmpHit;
+                                    hitCharacter = tmpHit.Entity;
                                     break;
                                 }
                             }
