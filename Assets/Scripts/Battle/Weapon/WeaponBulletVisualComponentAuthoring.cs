@@ -1,6 +1,7 @@
 ﻿using System;
 using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Transforms;
 using UnityEngine;
 
 namespace Battle.Weapon
@@ -13,8 +14,10 @@ namespace Battle.Weapon
     [Serializable]
     public struct BulletSpawnVisualRequestBuffer : IBufferElementData
     {
-        public quaternion Rotation;
-        public float3 Position;
+        // public quaternion Rotation;
+        public LocalTransform LocalTransform;
+        public float3 HitPosition;
+        public bool IsHit;
         public Entity OwnerCharacter;
         public Entity OwnerWeapon;
         public Entity OwnerPlayer;

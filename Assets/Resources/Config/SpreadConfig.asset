@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SpreadConfig
   m_EditorClassIdentifier: 
   spreadTypes:
-  - MaxSpreadAngle: 35
+  - MaxSpreadAngle: 0.1
     MinSpreadAngle: 0
     SpreadCurve:
       serializedVersion: 2
@@ -39,5 +39,5 @@ MonoBehaviour:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    MaxSpreadRecoveryTime: 1
-    SpreadToMaxTime: 6
+    SpreadPercetageIncreasePerShot: 0.3
+    SpreadPercentageDecreasePerSecond: 1

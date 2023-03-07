@@ -42,7 +42,7 @@ namespace Battle.Weapon
                         CollidesWith = authoring.HitFilter.Value
                     }
                 });
-                AddComponent<InterpolationDelay>();
+                // AddComponent<InterpolationDelay>();
             }
         }
     }

@@ -120,7 +120,7 @@ namespace Battle.Weapon
                     var localTransform = LocalTransform.FromPositionRotation(spawnRequestBuffer[i].Position,
                         spawnRequestBuffer[i].Rotation);
                     //Compute Spread
-                    WeaponUtility.ComputeBulletRotation(ref localTransform, spawnRequestBuffer[i].SpreadAngleRotX,
+                    WeaponUtility.ComputeBulletSpreadRotation(ref localTransform, spawnRequestBuffer[i].SpreadAngleRotX,
                         spawnRequestBuffer[i].SpreadAngleRotZ);
                     CommandBuffer.SetComponent(chunkIndexInQuery, bullet, localTransform);
                     CommandBuffer.SetComponent(chunkIndexInQuery, bullet, new BulletOwner()
@@ -389,34 +389,34 @@ namespace Battle.Weapon
 
             var commandBuffer = SystemAPI.GetSingletonRW<PostPredictionPreTransformsECBSystem.Singleton>().ValueRW
                 .CreateCommandBuffer(state.WorldUnmanaged);
-            new ClientBulletSpawnJob
-            {
-                CommandBuffer = commandBuffer.AsParallelWriter(),
-            }.ScheduleParallel(state.Dependency).Complete();
+            // new ClientBulletSpawnJob
+            // {
+            //     CommandBuffer = commandBuffer.AsParallelWriter(),
+            // }.ScheduleParallel(state.Dependency).Complete();
         }
         
-        [BurstCompile]
-        public partial struct ClientBulletSpawnJob : IJobEntity
-        {
-            public EntityCommandBuffer.ParallelWriter CommandBuffer;
-            
-            void Execute(Entity entity, [ChunkIndexInQuery] int chunkIndexInQuery, 
-                ref DynamicBuffer<BulletSpawnVisualRequestBuffer> spawnVisualRequestBuffer)
-            {
-                for (int i = 0; i < spawnVisualRequestBuffer.Length; i++)
-                {
-                    var bullet = CommandBuffer.Instantiate(chunkIndexInQuery, spawnVisualRequestBuffer[i].BulletVisualPrefab);
-                    CommandBuffer.SetComponent(chunkIndexInQuery, bullet, LocalTransform.FromPositionRotation( 
-                        spawnVisualRequestBuffer[i].Position, spawnVisualRequestBuffer[i].Rotation));
-                    CommandBuffer.SetComponent(chunkIndexInQuery, bullet, new BulletOwner()
-                    {
-                        OwnerCharacter = spawnVisualRequestBuffer[i].OwnerCharacter,
-                        OwnerPlayer = spawnVisualRequestBuffer[i].OwnerPlayer,
-                        OwnerWeapon = spawnVisualRequestBuffer[i].OwnerWeapon,
-                    });
-                }
-                spawnVisualRequestBuffer.Clear();
-            }
-        }
+        // [BurstCompile]
+        // public partial struct ClientBulletSpawnJob : IJobEntity
+        // {
+        //     public EntityCommandBuffer.ParallelWriter CommandBuffer;
+        //     
+        //     void Execute(Entity entity, [ChunkIndexInQuery] int chunkIndexInQuery, 
+        //         ref DynamicBuffer<BulletSpawnVisualRequestBuffer> spawnVisualRequestBuffer)
+        //     {
+        //         for (int i = 0; i < spawnVisualRequestBuffer.Length; i++)
+        //         {
+        //             var bullet = CommandBuffer.Instantiate(chunkIndexInQuery, spawnVisualRequestBuffer[i].BulletVisualPrefab);
+        //             CommandBuffer.SetComponent(chunkIndexInQuery, bullet, LocalTransform.FromPositionRotation( 
+        //                 spawnVisualRequestBuffer[i].Position, spawnVisualRequestBuffer[i].Rotation));
+        //             CommandBuffer.SetComponent(chunkIndexInQuery, bullet, new BulletOwner()
+        //             {
+        //                 OwnerCharacter = spawnVisualRequestBuffer[i].OwnerCharacter,
+        //                 OwnerPlayer = spawnVisualRequestBuffer[i].OwnerPlayer,
+        //                 OwnerWeapon = spawnVisualRequestBuffer[i].OwnerWeapon,
+        //             });
+        //         }
+        //         spawnVisualRequestBuffer.Clear();
+        //     }
+        // }
     }
 }
