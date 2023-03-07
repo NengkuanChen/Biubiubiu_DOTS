@@ -36,14 +36,6 @@ namespace Battle.Weapon
     
     
     
-    public struct BulletVisualCleanUp : ICleanupComponentData
-    {
-        public Entity HitVfx;
-        public float3 HitPosition;
-        public float3 HitNormal;
-    }
-    
-    
     public class BulletAuthoring : MonoBehaviour
     {
         public float Damage;
