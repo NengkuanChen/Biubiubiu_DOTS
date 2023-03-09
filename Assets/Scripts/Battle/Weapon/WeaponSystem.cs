@@ -44,7 +44,7 @@ namespace Battle.Weapon
         private BufferLookup<PhysicsColliderKeyEntityPair> physicsColliderKeyEntityPair;
 
         private ComponentLookup<CharacterHitBoxComponent> characterHitBoxComponentLookup;
-        
+
         private BufferLookup<BulletSpawnVisualRequestBuffer> bulletSpawnVisualRequestBufferLookup;
 
         private NativeList<RaycastHit> hits;
@@ -138,13 +138,28 @@ namespace Battle.Weapon
             state.Dependency.Complete();
 
 
-            HandleRaycastWeaponShot(state.WorldUnmanaged.IsServer(),
-                SystemAPI.GetSingleton<NetworkTime>(), SystemAPI.GetSingleton<PhysicsWorldSingleton>().PhysicsWorld,
-                SystemAPI.GetSingleton<PhysicsWorldHistorySingleton>(), localToWorldLookup,
-                storedKinematicCharacterDataLookup,
-                characterComponentLookup, characterHitBoxComponentLookup, physicsColliderKeyEntityPair,
-                bulletSpawnVisualRequestBufferLookup,
-                ref hits, commandBuffer, ref state);
+            // HandleRaycastWeaponShot(state.WorldUnmanaged.IsServer(),
+            //     SystemAPI.GetSingleton<NetworkTime>(), SystemAPI.GetSingleton<PhysicsWorldSingleton>().PhysicsWorld,
+            //     SystemAPI.GetSingleton<PhysicsWorldHistorySingleton>(), localToWorldLookup,
+            //     storedKinematicCharacterDataLookup,
+            //     characterComponentLookup, characterHitBoxComponentLookup, physicsColliderKeyEntityPair,
+            //     bulletSpawnVisualRequestBufferLookup,
+            //     ref hits, commandBuffer, ref state);
+            new RaycastWeaponShotJob()
+            {
+                RaycastHits = hits,
+                CommandBuffer = commandBuffer,
+                LocalToWorldLookup = localToWorldLookup,
+                CharacterComponentLookUp = characterComponentLookup,
+                IsServer = state.WorldUnmanaged.IsServer(),
+                StoredKinematicCharacterDataLookup = storedKinematicCharacterDataLookup,
+                PhysicsWorldHistory = SystemAPI.GetSingleton<PhysicsWorldHistorySingleton>(),
+                PhysicsColliderKeyEntityPairBufferLookup = physicsColliderKeyEntityPair,
+                CharacterHitBoxComponentLookUp = characterHitBoxComponentLookup,
+                PhysicsWorld = SystemAPI.GetSingleton<PhysicsWorldSingleton>().PhysicsWorld,
+                NetworkTime = SystemAPI.GetSingleton<NetworkTime>(),
+            }.Schedule(state.Dependency).Complete();
+            
         }
 
         [BurstCompile]
@@ -398,163 +413,171 @@ namespace Battle.Weapon
                         });
                         commandBuffer.DestroyEntity(damageInfo);
                     }
-                    
+
                     // bulletSpawnVisualRequestBuffer.Add(visualRequestBuffer);
                     Debug.Log(
                         $"Hit found: {hitFound}, Distance: {closetValidHit.Fraction * raycastWeaponComponent.ValueRW.MaxRange}");
-                    
+
                 }
             }
         }
 
 
-        //     public partial struct RaycastWeaponShotJob : IJobEntity
-        //     {
-        //         [ReadOnly]
-        //         public bool IsServer;
-        //
-        //         [ReadOnly] 
-        //         public NetworkTime NetworkTime;
-        //         
-        //         [ReadOnly]
-        //         public PhysicsWorld PhysicsWorld;
-        //
-        //         [ReadOnly] 
-        //         public PhysicsWorldHistorySingleton PhysicsWorldHistory;
-        //         
-        //         [ReadOnly]
-        //         public ComponentLookup<LocalToWorld> LocalToWorldLookup;
-        //         
-        //         [ReadOnly]
-        //         public ComponentLookup<StoredKinematicCharacterData> StoredKinematicCharacterDataLookup;
-        //         
-        //         [ReadOnly]
-        //         public ComponentLookup<FirstPersonCharacterComponent> CharacterComponentLookUp;
-        //         
-        //         [ReadOnly]
-        //         public ComponentLookup<CharacterHitBoxComponent> CharacterHitBoxComponentLookUp;
-        //         
-        //         [ReadOnly]
-        //         public BufferLookup<PhysicsColliderKeyEntityPair> PhysicsColliderKeyEntityPairBufferLookup;
-        //         
-        //         public NativeList<RaycastHit> RaycastHits;
-        //         
-        //         
-        //
-        //
-        //         void Execute(Entity entity, ref RaycastWeaponComponent raycastWeaponComponent,
-        //             ref WeaponComponent weaponComponent,
-        //             ref WeaponOwnerComponent ownerComponent,
-        //             ref WeaponSpreadComponent spreadComponent,
-        //             ref WeaponBulletVisualComponent bulletVisualComponent,
-        //             ref DynamicBuffer<BulletSpawnVisualRequestBuffer> bulletSpawnVisualRequestBuffer,
-        //             in InterpolationDelay interpolationDelay,
-        //             in WeaponFiringComponent weaponFiringComponent)
-        //         {
-        //             PhysicsWorldHistory.GetCollisionWorldFromTick(NetworkTime.ServerTick, interpolationDelay.Value,
-        //                 ref PhysicsWorld, out var collisionWorld);
-        //             for (int i = 0; i < weaponFiringComponent.TickBulletsCounter; i++)
-        //             {
-        //                 WeaponUtility.ComputeSpread(ref spreadComponent, out var spreadX, out var spreadZ);
-        //                 WeaponUtility.ComputeRaycastShotDetail(ref raycastWeaponComponent, ref ownerComponent,
-        //                     ref bulletVisualComponent,
-        //                     CharacterComponentLookUp[ownerComponent.OwnerCharacter].ViewEntity,
-        //                     weaponComponent.MuzzleSocket,
-        //                     spreadX, spreadZ, LocalToWorldLookup, CharacterHitBoxComponentLookUp,
-        //                     StoredKinematicCharacterDataLookup,
-        //                     PhysicsColliderKeyEntityPairBufferLookup, interpolationDelay, collisionWorld, ref RaycastHits,
-        //                     out bool hitFound,
-        //                     out RaycastHit closetValidHit, out BulletSpawnVisualRequestBuffer visualRequestBuffer,
-        //                     out float damageMultiplier);
-        //                 bulletSpawnVisualRequestBuffer.Add(visualRequestBuffer);
-        //                 Debug.Log($"Hit found: {hitFound}, Distance: {closetValidHit.Fraction * raycastWeaponComponent.MaxRange}");
-        //             }
-        //         }
-        //     }
-        // }
+        public partial struct RaycastWeaponShotJob : IJobEntity
+        {
+            [ReadOnly] public bool IsServer;
+
+            [ReadOnly] public NetworkTime NetworkTime;
+
+            [ReadOnly] public PhysicsWorld PhysicsWorld;
+
+            [ReadOnly] public PhysicsWorldHistorySingleton PhysicsWorldHistory;
+
+            [ReadOnly] public ComponentLookup<LocalToWorld> LocalToWorldLookup;
+
+            [ReadOnly] public ComponentLookup<StoredKinematicCharacterData> StoredKinematicCharacterDataLookup;
+
+            [ReadOnly] public ComponentLookup<FirstPersonCharacterComponent> CharacterComponentLookUp;
+
+            [ReadOnly] public ComponentLookup<CharacterHitBoxComponent> CharacterHitBoxComponentLookUp;
+
+            [ReadOnly] public BufferLookup<PhysicsColliderKeyEntityPair> PhysicsColliderKeyEntityPairBufferLookup;
+            
+            public EntityCommandBuffer CommandBuffer;
+
+            public NativeList<RaycastHit> RaycastHits;
 
 
 
-        [UpdateInGroup(typeof(PredictedSimulationSystemGroup), OrderFirst = true)]
-        [UpdateBefore(typeof(PredictedFixedStepSimulationSystemGroup))]
-        [BurstCompile]
-        public partial struct WeaponActiveSystem : ISystem
+
+            void Execute(Entity entity, ref RaycastWeaponComponent raycastWeaponComponent,
+                ref WeaponComponent weaponComponent,
+                ref WeaponOwnerComponent ownerComponent,
+                ref WeaponSpreadComponent spreadComponent,
+                ref WeaponBulletVisualComponent bulletVisualComponent,
+                ref DynamicBuffer<BulletSpawnVisualRequestBuffer> bulletSpawnVisualRequestBuffer,
+                in InterpolationDelay interpolationDelay,
+                in WeaponFiringComponent weaponFiringComponent)
+            {
+                PhysicsWorldHistory.GetCollisionWorldFromTick(NetworkTime.ServerTick, interpolationDelay.Value,
+                    ref PhysicsWorld, out var collisionWorld);
+                for (int i = 0; i < weaponFiringComponent.TickBulletsCounter; i++)
+                {
+                    WeaponUtility.ComputeSpread(ref spreadComponent, out var spreadX, out var spreadZ);
+                    WeaponUtility.ComputeRaycastShotDetail(ref raycastWeaponComponent, ref ownerComponent,
+                        ref bulletVisualComponent,
+                        CharacterComponentLookUp[ownerComponent.OwnerCharacter].ViewEntity,
+                        weaponComponent.MuzzleSocket,
+                        spreadX, spreadZ, LocalToWorldLookup, CharacterHitBoxComponentLookUp,
+                        StoredKinematicCharacterDataLookup,
+                        PhysicsColliderKeyEntityPairBufferLookup, interpolationDelay, collisionWorld, ref RaycastHits,
+                        out bool hitFound,
+                        out RaycastHit closetValidHit, out BulletSpawnVisualRequestBuffer visualRequestBuffer,
+                        out float damageMultiplier, out Entity hitCharacter);
+                    if (!IsServer)
+                    {
+                        bulletSpawnVisualRequestBuffer.Add(visualRequestBuffer);
+                    }
+                    else if (hitCharacter != Entity.Null)
+                    {
+                        var damageInfo = CommandBuffer.CreateEntity();
+                        CommandBuffer.AddComponent(damageInfo, new BulletDamageCleanUp
+                        {
+                            CausedByPlayer = ownerComponent.OwnerPlayer,
+                            CausedByCharacter = ownerComponent.OwnerCharacter,
+                            DamagedCharacter = hitCharacter,
+                            CausedByWeapon = entity,
+                            DamageCaused = raycastWeaponComponent.Damage,
+                            DamageMultiplier = damageMultiplier,
+                        });
+                        CommandBuffer.DestroyEntity(damageInfo);
+                    }
+                    Debug.Log(
+                        $"Hit found: {hitFound}, Distance: {closetValidHit.Fraction * raycastWeaponComponent.MaxRange}");
+                }
+            }
+        }
+    }
+
+
+
+    [UpdateInGroup(typeof(PredictedSimulationSystemGroup), OrderFirst = true)]
+    [UpdateBefore(typeof(PredictedFixedStepSimulationSystemGroup))]
+    [BurstCompile]
+    public partial struct WeaponActiveSystem : ISystem
+    {
+
+        private ComponentLookup<WeaponControlComponent> weaponControlLookUp;
+        private ComponentLookup<FirstPersonCharacterComponent> firstPersonCharacterComponentLookup;
+        private BufferLookup<LinkedEntityGroup> linkedEntityGroupLookup;
+        private ComponentLookup<OwningPlayer> owningPlayerLookup;
+
+        public void OnCreate(ref SystemState state)
+        {
+            state.RequireForUpdate<WeaponComponent>();
+            weaponControlLookUp = state.GetComponentLookup<WeaponControlComponent>(true);
+            firstPersonCharacterComponentLookup = state.GetComponentLookup<FirstPersonCharacterComponent>(true);
+            linkedEntityGroupLookup = state.GetBufferLookup<LinkedEntityGroup>(false);
+            owningPlayerLookup = state.GetComponentLookup<OwningPlayer>(false);
+        }
+
+        public void OnDestroy(ref SystemState state)
         {
 
-            private ComponentLookup<WeaponControlComponent> weaponControlLookUp;
-            private ComponentLookup<FirstPersonCharacterComponent> firstPersonCharacterComponentLookup;
-            private BufferLookup<LinkedEntityGroup> linkedEntityGroupLookup;
-            private ComponentLookup<OwningPlayer> owningPlayerLookup;
+        }
 
-            public void OnCreate(ref SystemState state)
+        [BurstCompile]
+        public void OnUpdate(ref SystemState state)
+        {
+            weaponControlLookUp.Update(ref state);
+            firstPersonCharacterComponentLookup.Update(ref state);
+            linkedEntityGroupLookup.Update(ref state);
+            owningPlayerLookup.Update(ref state);
+            WeaponSetupJob weaponSetupJob = new WeaponSetupJob
             {
-                state.RequireForUpdate<WeaponComponent>();
-                weaponControlLookUp = state.GetComponentLookup<WeaponControlComponent>(true);
-                firstPersonCharacterComponentLookup = state.GetComponentLookup<FirstPersonCharacterComponent>(true);
-                linkedEntityGroupLookup = state.GetBufferLookup<LinkedEntityGroup>(false);
-                owningPlayerLookup = state.GetComponentLookup<OwningPlayer>(false);
-            }
+                commandBuffer = SystemAPI.GetSingletonRW<PostPredictionPreTransformsECBSystem.Singleton>().ValueRW
+                    .CreateCommandBuffer(state.WorldUnmanaged),
+                WeaponControlLookUp = weaponControlLookUp,
+                FirstPersonCharacterComponentLookup = firstPersonCharacterComponentLookup,
+                LinkedEntityGroupLookup = linkedEntityGroupLookup,
+                OwningPlayerLookup = owningPlayerLookup,
+            };
+            weaponSetupJob.Schedule();
+        }
 
-            public void OnDestroy(ref SystemState state)
+        [BurstCompile]
+        public partial struct WeaponSetupJob : IJobEntity
+        {
+            public EntityCommandBuffer commandBuffer;
+            [ReadOnly] public ComponentLookup<WeaponControlComponent> WeaponControlLookUp;
+            [ReadOnly] public ComponentLookup<FirstPersonCharacterComponent> FirstPersonCharacterComponentLookup;
+            public BufferLookup<LinkedEntityGroup> LinkedEntityGroupLookup;
+            public ComponentLookup<OwningPlayer> OwningPlayerLookup;
+
+            void Execute(Entity entity, ref ActiveWeaponComponent activeWeapon)
             {
-
-            }
-
-            [BurstCompile]
-            public void OnUpdate(ref SystemState state)
-            {
-                weaponControlLookUp.Update(ref state);
-                firstPersonCharacterComponentLookup.Update(ref state);
-                linkedEntityGroupLookup.Update(ref state);
-                owningPlayerLookup.Update(ref state);
-                WeaponSetupJob weaponSetupJob = new WeaponSetupJob
+                if (activeWeapon.WeaponEntity != activeWeapon.PreviousWeaponEntity)
                 {
-                    commandBuffer = SystemAPI.GetSingletonRW<PostPredictionPreTransformsECBSystem.Singleton>().ValueRW
-                        .CreateCommandBuffer(state.WorldUnmanaged),
-                    WeaponControlLookUp = weaponControlLookUp,
-                    FirstPersonCharacterComponentLookup = firstPersonCharacterComponentLookup,
-                    LinkedEntityGroupLookup = linkedEntityGroupLookup,
-                    OwningPlayerLookup = owningPlayerLookup,
-                };
-                weaponSetupJob.Schedule();
-            }
-
-            [BurstCompile]
-            public partial struct WeaponSetupJob : IJobEntity
-            {
-                public EntityCommandBuffer commandBuffer;
-                [ReadOnly] public ComponentLookup<WeaponControlComponent> WeaponControlLookUp;
-                [ReadOnly] public ComponentLookup<FirstPersonCharacterComponent> FirstPersonCharacterComponentLookup;
-                public BufferLookup<LinkedEntityGroup> LinkedEntityGroupLookup;
-                public ComponentLookup<OwningPlayer> OwningPlayerLookup;
-
-                void Execute(Entity entity, ref ActiveWeaponComponent activeWeapon)
-                {
-                    if (activeWeapon.WeaponEntity != activeWeapon.PreviousWeaponEntity)
+                    if (WeaponControlLookUp.HasComponent(activeWeapon.WeaponEntity))
                     {
-                        if (WeaponControlLookUp.HasComponent(activeWeapon.WeaponEntity))
+                        if (FirstPersonCharacterComponentLookup.TryGetComponent(entity,
+                                out FirstPersonCharacterComponent character))
                         {
-                            if (FirstPersonCharacterComponentLookup.TryGetComponent(entity,
-                                    out FirstPersonCharacterComponent character))
+                            commandBuffer.AddComponent(activeWeapon.WeaponEntity,
+                                new Parent { Value = character.WeaponAnimationSocketEntity });
+                            commandBuffer.AddComponent(activeWeapon.WeaponEntity, new WeaponOwnerComponent
                             {
-                                commandBuffer.AddComponent(activeWeapon.WeaponEntity,
-                                    new Parent { Value = character.WeaponAnimationSocketEntity });
-                                commandBuffer.AddComponent(activeWeapon.WeaponEntity, new WeaponOwnerComponent
-                                {
-                                    OwnerCharacter = entity,
-                                    OwnerPlayer = OwningPlayerLookup[entity].Entity
-                                });
-                                DynamicBuffer<LinkedEntityGroup> linkedEntityBuffer = LinkedEntityGroupLookup[entity];
-                                linkedEntityBuffer.Add(new LinkedEntityGroup { Value = activeWeapon.WeaponEntity });
-                            }
+                                OwnerCharacter = entity,
+                                OwnerPlayer = OwningPlayerLookup[entity].Entity
+                            });
+                            DynamicBuffer<LinkedEntityGroup> linkedEntityBuffer = LinkedEntityGroupLookup[entity];
+                            linkedEntityBuffer.Add(new LinkedEntityGroup { Value = activeWeapon.WeaponEntity });
                         }
-
-                        activeWeapon.PreviousWeaponEntity = activeWeapon.WeaponEntity;
                     }
+
+                    activeWeapon.PreviousWeaponEntity = activeWeapon.WeaponEntity;
                 }
             }
         }
-
-
     }
 }

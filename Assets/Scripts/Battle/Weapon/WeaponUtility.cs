@@ -51,7 +51,8 @@ namespace Battle.Weapon
                 LocalTransform.FromPositionRotation(muzzleLtW.Position, muzzleLtW.Rotation);
             ComputeRaycastSpread(ref shotLtW, spreadAngleRotX, spreadAngleRotZ, out float3 shotDirection,
                 out float3 shotPosition);
-            ComputeBulletSpreadRotation(ref muzzleLocalTransform, spreadAngleRotX, spreadAngleRotZ);
+            muzzleLocalTransform.Rotation = quaternion.LookRotationSafe(shotDirection, math.up());
+            // ComputeBulletSpreadRotation(ref muzzleLocalTransform, spreadAngleRotX, spreadAngleRotZ);
             visualRequestBuffer.LocalTransform = muzzleLocalTransform;
             
             
@@ -71,7 +72,7 @@ namespace Battle.Weapon
                 visualRequestBuffer.HitPosition = closetValidHit.Position;
                 visualRequestBuffer.IsHit = true;
                 muzzleLocalTransform.Rotation =
-                    quaternion.LookRotation(closetValidHit.Position - muzzleLtW.Position, math.up());
+                    quaternion.LookRotationSafe(closetValidHit.Position - muzzleLtW.Position, math.up());
 
             }
         }
