@@ -6,6 +6,7 @@ using Unity.Entities.Graphics;
 using Unity.Mathematics;
 using Unity.Rendering;
 using Unity.Transforms;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 public static class MiscUtilities
@@ -25,6 +26,26 @@ public static class MiscUtilities
             for (int i = 0; i < childBuffer.Length; i++)
             {
                 SetShadowModeInHierarchy(entityManager, ecb, childBuffer[i].Value, childBufferFromEntity, mode);
+            }
+        }
+    }
+    
+    public static void SetLayerInHierarchy(EntityManager entityManager, EntityCommandBuffer ecb, Entity onEntity, BufferLookup<Child> childBufferFromEntity, int layer)
+    {
+        if (entityManager.HasComponent<RenderFilterSettings>(onEntity))
+        {
+            RenderFilterSettings renderFilterSettings = entityManager.GetSharedComponent<RenderFilterSettings>(onEntity);
+            renderFilterSettings.Layer = layer;
+            ecb.SetSharedComponent(onEntity, renderFilterSettings);
+            Debug.Log(2);
+        }
+
+        if (childBufferFromEntity.HasBuffer(onEntity))
+        {
+            DynamicBuffer<Child> childBuffer = childBufferFromEntity[onEntity];
+            for (int i = 0; i < childBuffer.Length; i++)
+            {
+                SetLayerInHierarchy(entityManager, ecb, childBuffer[i].Value, childBufferFromEntity, layer);
             }
         }
     }

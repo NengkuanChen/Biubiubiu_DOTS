@@ -3,6 +3,7 @@ using Rival;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Entities.Graphics;
 using Unity.Mathematics;
 using Unity.NetCode;
 using Unity.Physics;
@@ -511,6 +512,8 @@ namespace Battle.Weapon
         private ComponentLookup<FirstPersonCharacterComponent> firstPersonCharacterComponentLookup;
         private BufferLookup<LinkedEntityGroup> linkedEntityGroupLookup;
         private ComponentLookup<OwningPlayer> owningPlayerLookup;
+        // private ComponentLookup<RenderFilterSettings> renderFilterSettingsLookup;
+        private BufferLookup<Child> childBufferLookup;
 
         public void OnCreate(ref SystemState state)
         {
@@ -519,6 +522,7 @@ namespace Battle.Weapon
             firstPersonCharacterComponentLookup = state.GetComponentLookup<FirstPersonCharacterComponent>(true);
             linkedEntityGroupLookup = state.GetBufferLookup<LinkedEntityGroup>(false);
             owningPlayerLookup = state.GetComponentLookup<OwningPlayer>(false);
+            childBufferLookup = state.GetBufferLookup<Child>(false);
         }
 
         public void OnDestroy(ref SystemState state)
@@ -533,6 +537,13 @@ namespace Battle.Weapon
             firstPersonCharacterComponentLookup.Update(ref state);
             linkedEntityGroupLookup.Update(ref state);
             owningPlayerLookup.Update(ref state);
+            childBufferLookup.Update(ref state);
+            var isServer = state.WorldUnmanaged.IsServer();
+            var localNetworkId = -1;
+            if (!isServer)
+            {
+                localNetworkId = SystemAPI.GetSingleton<NetworkIdComponent>().Value;
+            }
             WeaponSetupJob weaponSetupJob = new WeaponSetupJob
             {
                 commandBuffer = SystemAPI.GetSingletonRW<PostPredictionPreTransformsECBSystem.Singleton>().ValueRW
@@ -541,8 +552,12 @@ namespace Battle.Weapon
                 FirstPersonCharacterComponentLookup = firstPersonCharacterComponentLookup,
                 LinkedEntityGroupLookup = linkedEntityGroupLookup,
                 OwningPlayerLookup = owningPlayerLookup,
+                EntityManager = state.EntityManager,
+                ChildBufferLookup = childBufferLookup,
+                LocalNetworkId = localNetworkId,
+                IsServer = isServer
             };
-            weaponSetupJob.Schedule();
+            weaponSetupJob.Schedule(state.Dependency).Complete();
         }
 
         [BurstCompile]
@@ -553,8 +568,12 @@ namespace Battle.Weapon
             [ReadOnly] public ComponentLookup<FirstPersonCharacterComponent> FirstPersonCharacterComponentLookup;
             public BufferLookup<LinkedEntityGroup> LinkedEntityGroupLookup;
             public ComponentLookup<OwningPlayer> OwningPlayerLookup;
+            public BufferLookup<Child> ChildBufferLookup;
+            public EntityManager EntityManager;
+            public int LocalNetworkId;
+            public bool IsServer;
 
-            void Execute(Entity entity, ref ActiveWeaponComponent activeWeapon)
+            void Execute(Entity entity, ref ActiveWeaponComponent activeWeapon, GhostOwnerComponent ghostOwnerComponent)
             {
                 if (activeWeapon.WeaponEntity != activeWeapon.PreviousWeaponEntity)
                 {
@@ -572,6 +591,11 @@ namespace Battle.Weapon
                             });
                             DynamicBuffer<LinkedEntityGroup> linkedEntityBuffer = LinkedEntityGroupLookup[entity];
                             linkedEntityBuffer.Add(new LinkedEntityGroup { Value = activeWeapon.WeaponEntity });
+                            if (LocalNetworkId == ghostOwnerComponent.NetworkId && !IsServer)
+                            {
+                                MiscUtilities.SetLayerInHierarchy(EntityManager, commandBuffer, activeWeapon.WeaponEntity,
+                                    ChildBufferLookup, 0);
+                            }
                         }
                     }
 

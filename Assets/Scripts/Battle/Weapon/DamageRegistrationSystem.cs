@@ -65,6 +65,8 @@ namespace Battle.Weapon
             [ReadOnly]
             public BufferLookup<CharacterDamageSourceRecordBuffer> DamageSourceRecordBufferLookup;
             
+            
+
             public EntityCommandBuffer.ParallelWriter EntityCommandBuffer;
             public void Execute(Entity entity, [ChunkIndexInQuery] int chunkIndexInQuery, ref BulletDamageCleanUp bulletDamage)
             {
