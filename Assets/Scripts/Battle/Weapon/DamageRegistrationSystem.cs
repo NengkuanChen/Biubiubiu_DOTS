@@ -45,8 +45,8 @@ namespace Battle.Weapon
                 HealthLookup = healthLookup,
                 HealthRecoveryLookup = healthRecoveryLookup,
                 DamageSourceRecordBufferLookup = damageSourceRecordBufferLookup,
-                EntityCommandBuffer = commandBuffer
-            }.Schedule(state.Dependency).Complete();
+                EntityCommandBuffer = commandBuffer.AsParallelWriter()
+            }.ScheduleParallel(state.Dependency).Complete();
         }
         
         public void OnDestroy(ref SystemState state)
@@ -58,12 +58,14 @@ namespace Battle.Weapon
         {
             [ReadOnly]
             public ComponentLookup<Health> HealthLookup;
+           
             [ReadOnly]
             public ComponentLookup<HealthRecoveryComponent> HealthRecoveryLookup;
             
+            [ReadOnly]
             public BufferLookup<CharacterDamageSourceRecordBuffer> DamageSourceRecordBufferLookup;
             
-            public EntityCommandBuffer EntityCommandBuffer;
+            public EntityCommandBuffer.ParallelWriter EntityCommandBuffer;
             public void Execute(Entity entity, [ChunkIndexInQuery] int chunkIndexInQuery, ref BulletDamageCleanUp bulletDamage)
             {
                 var damage = bulletDamage.DamageCaused * bulletDamage.DamageMultiplier;
@@ -75,20 +77,22 @@ namespace Battle.Weapon
                     if (HealthRecoveryLookup.TryGetComponent(damagedCharacter, out HealthRecoveryComponent healthRecovery))
                     {
                         healthRecovery.RecoveryTimer = healthRecovery.RecoveryDelay;
+                        EntityCommandBuffer.SetComponent(chunkIndexInQuery, damagedCharacter, healthRecovery);
                     }
 
                     if (DamageSourceRecordBufferLookup.TryGetBuffer(damagedCharacter,
                             out DynamicBuffer<CharacterDamageSourceRecordBuffer> damageSourceRecordBuffer))
                     {
-                        damageSourceRecordBuffer.Add(new CharacterDamageSourceRecordBuffer
+                        // damageSourceRecordBuffer.Add();
+                        EntityCommandBuffer.AppendToBuffer(chunkIndexInQuery,damagedCharacter, new CharacterDamageSourceRecordBuffer
                         {
                             Damage = damage,
                             SourceCharacter = bulletDamage.CausedByCharacter,
                             SourcePlayer = bulletDamage.CausedByPlayer,
                         });
                     }
-                    EntityCommandBuffer.SetComponent(damagedCharacter, health);
-                    EntityCommandBuffer.RemoveComponent<BulletDamageCleanUp>(entity);
+                    EntityCommandBuffer.SetComponent(chunkIndexInQuery, damagedCharacter, health);
+                    EntityCommandBuffer.RemoveComponent<BulletDamageCleanUp>(chunkIndexInQuery, entity);
                     
                     Debug.Log($"damaged character {damagedCharacter.Index} for {damage} damage, health is now {health.CurrentHealth}");
                 }
