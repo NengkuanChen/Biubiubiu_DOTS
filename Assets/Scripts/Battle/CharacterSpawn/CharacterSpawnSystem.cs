@@ -1,4 +1,5 @@
-﻿using Battle.Weapon;
+﻿using Battle.Misc;
+using Battle.Weapon;
 using Game.Battle;
 using Unity.Burst;
 using Unity.Collections;
@@ -36,10 +37,13 @@ namespace Battle.CharacterSpawn
                     LocalTransform.FromPosition(spawnRequest.ValueRO.SpawnPosition));
                 commandBuffer.SetComponent(characterGhost, new OwningPlayer{ Entity = spawnRequest.ValueRO.ForPlayer});
                 
-                commandBuffer.SetComponent(characterGhost, new CharacterCleanupServer
+                commandBuffer.AddComponent(characterGhost, new CharacterCleanupServer
                 {
                     OwningConnectionEntity = spawnRequest.ValueRO.ForConnection,
                 });
+                
+                //Add DamageRecorder
+                commandBuffer.AddBuffer<CharacterDamageSourceRecordBuffer>(characterGhost);
                 
                 //assign character to player
                 FirstPersonPlayer player = SystemAPI.GetComponent<FirstPersonPlayer>(spawnRequest.ValueRO.ForPlayer);
