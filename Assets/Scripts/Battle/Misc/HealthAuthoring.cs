@@ -6,6 +6,8 @@ using UnityEngine;
 public class HealthAuthoring : MonoBehaviour
 {
     public float MaxHealth = 100f;
+    public float HealthRecoveryRate = 10f;
+    public float HealthRecoveryDelay = 8f;
     
     public class Baker : Baker<HealthAuthoring>
     {
@@ -15,6 +17,12 @@ public class HealthAuthoring : MonoBehaviour
             {
                 MaxHealth = authoring.MaxHealth,
                 CurrentHealth = authoring.MaxHealth,
+            });
+            AddComponent(new HealthRecoveryComponent
+            {
+                RecoveryRate = authoring.HealthRecoveryRate,
+                RecoveryDelay = authoring.HealthRecoveryDelay,
+                RecoveryTimer = authoring.HealthRecoveryDelay,
             });
         }
     }

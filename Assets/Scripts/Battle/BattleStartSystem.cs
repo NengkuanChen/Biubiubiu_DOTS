@@ -89,6 +89,11 @@ namespace Game.Battle
             foreach (var (playerIdentity, playerIdentityEntity) in SystemAPI.Query<PlayerIdentity>().WithEntityAccess())
             {
                 var playerEntity = commandBuffer.Instantiate(battleEntitySpawner.PlayerGhost);
+                commandBuffer.SetComponent(playerEntity, new FirstPersonPlayer
+                {
+                    Name = playerIdentity.PlayerNickname,
+                    
+                });
                 var networkId = networkIdFromEntity[playerIdentity.SourceConnection];
                 commandBuffer.SetComponent(playerEntity, new GhostOwnerComponent
                 {

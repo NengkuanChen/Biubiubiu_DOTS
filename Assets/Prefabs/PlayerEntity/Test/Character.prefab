@@ -597,6 +597,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   MaxHealth: 100
+  HealthRecoveryRate: 10
+  HealthRecoveryDelay: 8
 --- !u!114 &-2257928589708603627
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -21,11 +21,13 @@ namespace Battle.Weapon
     public partial struct DamageRegistrationSystemServer : ISystem
     {
         private ComponentLookup<Health> healthLookup;
+        private ComponentLookup<HealthRecoveryComponent> healthRecoveryLookup;
 
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<WeaponComponent>();
             healthLookup = state.GetComponentLookup<Health>();
+            healthRecoveryLookup = state.GetComponentLookup<HealthRecoveryComponent>();
         }
 
         public void OnUpdate(ref SystemState state)
@@ -33,6 +35,7 @@ namespace Battle.Weapon
             var commandBuffer = SystemAPI.GetSingletonRW<PostPredictionPreTransformsECBSystem.Singleton>().ValueRW
                 .CreateCommandBuffer(state.WorldUnmanaged);
             healthLookup.Update(ref state);
+            healthRecoveryLookup.Update(ref state);
             new BulletDamageCleanUpJob()
             {
                 HealthLookup = healthLookup,
@@ -49,6 +52,8 @@ namespace Battle.Weapon
         {
             [ReadOnly]
             public ComponentLookup<Health> HealthLookup;
+            [ReadOnly]
+            public ComponentLookup<HealthRecoveryComponent> HealthRecoveryLookup;
             public EntityCommandBuffer.ParallelWriter EntityCommandBufferParallelWriter;
             public void Execute(Entity entity, [ChunkIndexInQuery] int chunkIndexInQuery, ref BulletDamageCleanUp bulletDamage)
             {
@@ -58,6 +63,10 @@ namespace Battle.Weapon
                 if (HealthLookup.TryGetComponent(damagedCharacter, out Health health))
                 {
                     health.CurrentHealth -= damage;
+                    if (HealthRecoveryLookup.TryGetComponent(damagedCharacter, out HealthRecoveryComponent healthRecovery))
+                    {
+                        healthRecovery.RecoveryTimer = healthRecovery.RecoveryDelay;
+                    }
                     EntityCommandBufferParallelWriter.SetComponent(chunkIndexInQuery, damagedCharacter, health);
                     EntityCommandBufferParallelWriter.RemoveComponent<BulletDamageCleanUp>(chunkIndexInQuery, entity);
                     Debug.Log($"damaged character {damagedCharacter.Index} for {damage} damage, health is now {health.CurrentHealth}");

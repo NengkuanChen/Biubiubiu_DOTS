@@ -18,3 +18,12 @@ public struct Health : IComponentData
         return CurrentHealth <= 0f;
     }
 }
+
+[Serializable]
+[GhostComponent]
+public struct HealthRecoveryComponent : IComponentData
+{
+    public float RecoveryRate;
+    public float RecoveryDelay;
+    public float RecoveryTimer;
+}

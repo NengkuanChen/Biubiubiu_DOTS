@@ -36,6 +36,10 @@ namespace Battle.CharacterSpawn
                     LocalTransform.FromPosition(spawnRequest.ValueRO.SpawnPosition));
                 commandBuffer.SetComponent(characterGhost, new OwningPlayer{ Entity = spawnRequest.ValueRO.ForPlayer});
                 
+                commandBuffer.SetComponent(characterGhost, new CharacterCleanupServer
+                {
+                    OwningConnectionEntity = spawnRequest.ValueRO.ForConnection,
+                });
                 
                 //assign character to player
                 FirstPersonPlayer player = SystemAPI.GetComponent<FirstPersonPlayer>(spawnRequest.ValueRO.ForPlayer);
