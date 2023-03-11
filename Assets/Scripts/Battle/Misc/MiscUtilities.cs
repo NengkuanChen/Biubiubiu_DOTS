@@ -37,7 +37,6 @@ public static class MiscUtilities
             RenderFilterSettings renderFilterSettings = entityManager.GetSharedComponent<RenderFilterSettings>(onEntity);
             renderFilterSettings.Layer = layer;
             ecb.SetSharedComponent(onEntity, renderFilterSettings);
-            Debug.Log(2);
         }
 
         if (childBufferFromEntity.HasBuffer(onEntity))

@@ -11,6 +11,11 @@ namespace Battle.Weapon
         public float FireInterval;
         public Entity MuzzleSocket;
     }
+
+    public struct WeaponLayerSetupRequest : IComponentData
+    {
+        public int Layer;
+    }
     
     
     [DisallowMultipleComponent]

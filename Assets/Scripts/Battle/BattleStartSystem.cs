@@ -166,6 +166,41 @@ namespace Game.Battle
     
     [BurstCompile]
     [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.ThinClientSimulation)]
+    public partial struct WeaponLayerSetUpSystemClient : ISystem
+    {
+        private BufferLookup<Child> childLookup;
+
+        public void OnCreate(ref SystemState state)
+        {
+            state.RequireForUpdate<WeaponLayerSetupRequest>();
+            childLookup = state.GetBufferLookup<Child>();
+        }
+
+        public void OnUpdate(ref SystemState state)
+        {
+            int localNetworkId = SystemAPI.GetSingleton<NetworkIdComponent>().Value;
+            var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
+            childLookup.Update(ref state);
+            foreach (var (weaponLayerSetupRequest, ghostOwner, entity) in SystemAPI.Query<WeaponLayerSetupRequest, RefRO<GhostOwnerComponent>>().WithEntityAccess())
+            {
+                if (localNetworkId == ghostOwner.ValueRO.NetworkId)
+                {
+                    MiscUtilities.SetLayerInHierarchy(state.EntityManager, commandBuffer, entity, childLookup,
+                        weaponLayerSetupRequest.Layer);
+                }
+                else
+                {
+                    MiscUtilities.SetLayerInHierarchy(state.EntityManager, commandBuffer, entity, childLookup,
+                        0);
+                }
+                commandBuffer.RemoveComponent<WeaponLayerSetupRequest>(entity);
+            }
+            commandBuffer.Playback(state.EntityManager);
+        }
+    }
+    
+    [BurstCompile]
+    [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.ThinClientSimulation)]
     public partial struct CameraSetUpSystemClient : ISystem
     {
         public void OnCreate(ref SystemState state)
@@ -207,6 +242,7 @@ namespace Game.Battle
                     
                     //Do CrossHair Here
                     //.....
+                    BattleForm.Open<BattleForm>();
                     
                     commandBuffer.AddComponent(entity, new CharacterInBattleTag());
                     //Disable CharacterRenderer

@@ -7,6 +7,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.NetCode;
 using Unity.Transforms;
+using UnityEngine;
 
 namespace Battle.CharacterSpawn
 {
@@ -14,6 +15,7 @@ namespace Battle.CharacterSpawn
     [BurstCompile]
     public partial struct CharacterSpawnSystem : ISystem
     {
+
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<BattleEntitySpawner>();
@@ -55,8 +57,6 @@ namespace Battle.CharacterSpawn
                 var weaponEntity = commandBuffer.Instantiate(entitySpawner.TestGunGhost);
 
 
-                //
-                
                 commandBuffer.AddComponent(characterGhost, new ActiveWeaponComponent
                 {
                     WeaponEntity = weaponEntity

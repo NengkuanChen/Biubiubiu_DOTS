@@ -10,6 +10,7 @@ using Unity.Physics;
 using Unity.Physics.Systems;
 using Unity.Transforms;
 using UnityEngine;
+using UnityEngine.Rendering;
 using RaycastHit = Unity.Physics.RaycastHit;
 
 namespace Battle.Weapon
@@ -552,7 +553,7 @@ namespace Battle.Weapon
                 FirstPersonCharacterComponentLookup = firstPersonCharacterComponentLookup,
                 LinkedEntityGroupLookup = linkedEntityGroupLookup,
                 OwningPlayerLookup = owningPlayerLookup,
-                EntityManager = state.EntityManager,
+                EntityManager = state.WorldUnmanaged.EntityManager,
                 ChildBufferLookup = childBufferLookup,
                 LocalNetworkId = localNetworkId,
                 IsServer = isServer
@@ -591,11 +592,18 @@ namespace Battle.Weapon
                             });
                             DynamicBuffer<LinkedEntityGroup> linkedEntityBuffer = LinkedEntityGroupLookup[entity];
                             linkedEntityBuffer.Add(new LinkedEntityGroup { Value = activeWeapon.WeaponEntity });
-                            if (LocalNetworkId == ghostOwnerComponent.NetworkId && !IsServer)
+                            if (!IsServer)
                             {
-                                MiscUtilities.SetLayerInHierarchy(EntityManager, commandBuffer, activeWeapon.WeaponEntity,
-                                    ChildBufferLookup, 0);
+                                commandBuffer.AddComponent(entity, new WeaponLayerSetupRequest
+                                {
+                                    Layer = 9
+                                });
                             }
+                            // if (LocalNetworkId == ghostOwnerComponent.NetworkId && !IsServer)
+                            // {
+                            //     MiscUtilities.SetLayerInHierarchy(EntityManager, commandBuffer, activeWeapon.WeaponEntity,
+                            //         ChildBufferLookup, 0);
+                            // }
                         }
                     }
 
