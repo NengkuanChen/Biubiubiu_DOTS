@@ -109,14 +109,7 @@ namespace Game.Battle
                     ForPlayer = playerEntity,
                     PlayerIdentity = playerIdentityEntity
                 });
-                // var weaponRequest = commandBuffer.CreateEntity();
-                // commandBuffer.AddComponent(weaponRequest, new SetUpWeaponRequestComponent
-                // {
-                //     ForPlayer = playerEntity,
-                //     ForConnection = playerIdentity.SourceConnection,
-                //     WeaponEntity = battleEntitySpawner.TestGunGhost
-                // });
-                
+
             }
             
             testSpawnPositions.Dispose();

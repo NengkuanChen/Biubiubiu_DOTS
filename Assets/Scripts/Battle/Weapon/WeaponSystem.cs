@@ -228,7 +228,7 @@ namespace Battle.Weapon
             {
                 if (reloadComponent.IsReloading)
                 {
-                    weaponFiringComponent.IsFiring = false;
+                    // weaponFiringComponent.IsFiring = false;
                     weaponFiringComponent.TickBulletsCounter = 0;
                     weaponFiringComponent.RoundShotTimer = 0;
                     weaponFiringComponent.RoundBulletsCounter = 0;
@@ -599,11 +599,6 @@ namespace Battle.Weapon
                                     Layer = 9
                                 });
                             }
-                            // if (LocalNetworkId == ghostOwnerComponent.NetworkId && !IsServer)
-                            // {
-                            //     MiscUtilities.SetLayerInHierarchy(EntityManager, commandBuffer, activeWeapon.WeaponEntity,
-                            //         ChildBufferLookup, 0);
-                            // }
                         }
                     }
 
