@@ -104,7 +104,8 @@ namespace Game.Battle
                 var spawnCharacterRequest = commandBuffer.CreateEntity();
                 commandBuffer.AddComponent(spawnCharacterRequest, new CharacterSpawnRequest
                 {
-                    ForConnection = playerIdentity.SourceConnection,
+                    // ForConnection = playerIdentity.SourceConnection,
+                    ForConnectionId = networkId.Value,
                     SpawnPosition = testSpawnPositions[spawnPositionIndex++],
                     ForPlayer = playerEntity,
                     PlayerIdentity = playerIdentityEntity

@@ -7,6 +7,7 @@ namespace Battle.Character
 {
     [UpdateInGroup(typeof(PredictedSimulationSystemGroup))]
     [UpdateAfter(typeof(FirstPersonCharacterVariableUpdateSystem))]
+    [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
     [BurstCompile]
     public partial struct CharacterHealthSystem : ISystem
     {

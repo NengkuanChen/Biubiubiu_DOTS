@@ -86,7 +86,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   FullAuto: 1
-  FireRate: 10
+  FireRate: 5
   MuzzleSocket: {fileID: 930909487581887982}
 --- !u!114 &9176661325985701070
 MonoBehaviour:

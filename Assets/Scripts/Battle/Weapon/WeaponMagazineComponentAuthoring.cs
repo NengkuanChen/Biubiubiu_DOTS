@@ -1,12 +1,17 @@
 ﻿using Unity.Entities;
+using Unity.NetCode;
 using UnityEngine;
 
 namespace Battle.Weapon
 {
+    [GhostComponent]
     public struct WeaponMagazineComponent : IComponentData
     {
+        [GhostField]
         public int MagazineSize;
+        [GhostField]
         public int MagazineRestBullet;
+        [GhostField]
         public float ReloadTime;
     }
     
@@ -34,9 +39,12 @@ namespace Battle.Weapon
         }
     }
     
+    [GhostComponent]
     public struct WeaponReloadComponent : IComponentData
     {
+        [GhostField]
         public float ReloadTimeLeft;
+        [GhostField]
         public bool IsReloading;
     }
 }

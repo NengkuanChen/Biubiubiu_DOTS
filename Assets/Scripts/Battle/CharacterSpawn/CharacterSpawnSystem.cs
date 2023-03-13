@@ -34,15 +34,15 @@ namespace Battle.CharacterSpawn
             {
                 var entitySpawner = SystemAPI.GetSingleton<BattleEntitySpawner>();
                 var characterGhost = commandBuffer.Instantiate(entitySpawner.TestCharacterGhost);
-                var connectionId = SystemAPI.GetComponent<NetworkIdComponent>(spawnRequest.ValueRO.ForConnection).Value;
+                // var connectionId = SystemAPI.GetComponent<NetworkIdComponent>(spawnRequest.ValueRO.ForConnection).Value;
                 commandBuffer.SetComponent(characterGhost,
                     LocalTransform.FromPosition(spawnRequest.ValueRO.SpawnPosition));
                 commandBuffer.SetComponent(characterGhost, new OwningPlayer{ Entity = spawnRequest.ValueRO.ForPlayer});
                 
-                commandBuffer.AddComponent(characterGhost, new CharacterCleanupServer
-                {
-                    OwningConnectionEntity = spawnRequest.ValueRO.ForConnection,
-                });
+                // commandBuffer.AddComponent(characterGhost, new CharacterCleanupServer
+                // {
+                //     OwningConnectionEntity = spawnRequest.ValueRO.ForConnection,
+                // });
                 
                 //Add DamageRecorder
                 commandBuffer.AddBuffer<CharacterDamageSourceRecordBuffer>(characterGhost);
@@ -65,11 +65,11 @@ namespace Battle.CharacterSpawn
 
                 commandBuffer.SetComponent(weaponEntity, new GhostOwnerComponent
                 {
-                    NetworkId = connectionId
+                    NetworkId = spawnRequest.ValueRO.ForConnectionId
                 });
                 commandBuffer.SetComponent(characterGhost, new GhostOwnerComponent
                 {
-                    NetworkId = connectionId
+                    NetworkId = spawnRequest.ValueRO.ForConnectionId,
                 });
             }
             
@@ -79,7 +79,8 @@ namespace Battle.CharacterSpawn
 
     public struct CharacterSpawnRequest : IComponentData
     {
-        public Entity ForConnection;
+        // public Entity ForConnection;
+        public int ForConnectionId;
         public Entity ForPlayer;
         public float3 SpawnPosition;
         public Entity PlayerIdentity;
