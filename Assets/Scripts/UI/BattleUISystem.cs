@@ -1,5 +1,6 @@
 ﻿using Battle.Weapon;
 using Unity.Entities;
+using Unity.Mathematics;
 using Unity.NetCode;
 
 namespace UI
@@ -31,7 +32,7 @@ namespace UI
             {
                 if (ghostOwner.ValueRO.NetworkId == localNetworkId)
                 {
-                    var health = healthComponent.ValueRO.CurrentHealth;
+                    var health = math.ceil(healthComponent.ValueRO.CurrentHealth);
                     var maxHealth = healthComponent.ValueRO.MaxHealth;
                     battleForm.UpdatePlayerHealth(health, maxHealth);
                 }

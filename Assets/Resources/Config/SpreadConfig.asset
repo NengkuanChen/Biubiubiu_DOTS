@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SpreadConfig
   m_EditorClassIdentifier: 
   spreadTypes:
-  - MaxSpreadAngle: 0.1
+  - MaxSpreadAngle: 0.05
     MinSpreadAngle: 0
     SpreadCurve:
       serializedVersion: 2
