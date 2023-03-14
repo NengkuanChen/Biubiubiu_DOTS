@@ -29,6 +29,7 @@ namespace Game.Battle
             state.RequireForUpdate(state.GetEntityQuery(builder));
             networkIdFromEntity = state.GetComponentLookup<NetworkIdComponent>(true);
             state.RequireForUpdate<BattleEntitySpawner>();
+            state.RequireForUpdate<SpawnPoint>();
         }
 
         public void OnDestroy(ref SystemState state)
@@ -75,14 +76,10 @@ namespace Game.Battle
         {
             UIManager.Singleton.CloseForm<LoadingForm>();
             Debug.Log("Server: GameStart");
+
+            EntityQuery spawnPointsQuery = SystemAPI.QueryBuilder().WithAll<SpawnPoint, LocalToWorld>().Build();
+            NativeArray<LocalToWorld> spawnPointLtWs = spawnPointsQuery.ToComponentDataArray<LocalToWorld>(Allocator.Temp);
             
-            NativeArray<float3> testSpawnPositions = new NativeArray<float3>(new float3[]
-            {
-                new float3(0, 0, 0),
-                new float3(1, 0, 1),
-                new float3(-1, 0, -1),
-                new float3(2, 0, 2),
-            }, Allocator.Temp);
             var spawnPositionIndex = 0;
 
             //Spawn Player For Each PlayerIdentity
@@ -106,14 +103,14 @@ namespace Game.Battle
                 {
                     // ForConnection = playerIdentity.SourceConnection,
                     ForConnectionId = networkId.Value,
-                    SpawnPosition = testSpawnPositions[spawnPositionIndex++],
+                    SpawnPosition = spawnPointLtWs[spawnPositionIndex++].Position,
                     ForPlayer = playerEntity,
                     PlayerIdentity = playerIdentityEntity
                 });
 
             }
             
-            testSpawnPositions.Dispose();
+            spawnPointLtWs.Dispose();
             Cursor.lockState = CursorLockMode.Locked;
         }
     }

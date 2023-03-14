@@ -1,4 +1,5 @@
 ﻿using Battle.Weapon;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.NetCode;
@@ -22,6 +23,19 @@ namespace UI
             var localNetworkId = SystemAPI.GetSingleton<NetworkIdComponent>().Value;
             UpdatePlayerAmmoAmount(ref state, localNetworkId);
             UpdatePlayerHealthBar(ref state, localNetworkId);
+            UpdatePingShow(ref state);
+        }
+        
+        
+        private void UpdatePingShow(ref SystemState state)
+        {
+            var framerateForm = BattleForm.Singleton<FramerateForm>();
+            EntityQuery networkAckQuery = new EntityQueryBuilder(Allocator.Temp).WithAll<NetworkSnapshotAckComponent>().Build(state.EntityManager);
+            if (networkAckQuery.HasSingleton<NetworkSnapshotAckComponent>())
+            {
+                NetworkSnapshotAckComponent networkAck = networkAckQuery.GetSingleton<NetworkSnapshotAckComponent>();
+                framerateForm.UpdatePing((int)networkAck.EstimatedRTT);
+            }
         }
         
         private void UpdatePlayerHealthBar(ref SystemState state, int localNetworkId)
