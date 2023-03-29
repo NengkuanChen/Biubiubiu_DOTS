@@ -21,7 +21,6 @@ namespace Battle.Weapon
         public AnimationCurve VerticalRecoilCurve;
         public AnimationCurve HorizontalRecoilCurve;
         public float MaxRecoveryTime;
-        public AnimationCurve RecoveryCurve;
         public float ADSRecoilMultiplier;
     }
 }

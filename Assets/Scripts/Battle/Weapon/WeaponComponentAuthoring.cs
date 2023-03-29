@@ -22,6 +22,7 @@ namespace Battle.Weapon
     public class WeaponComponentAuthoring : MonoBehaviour
     {
         public bool FullAuto = true;
+        [Min(0.01f)]
         public float FireRate = 5f;
         public GameObject MuzzleSocket;
         public class WeaponComponentBaker : Baker<WeaponComponentAuthoring>

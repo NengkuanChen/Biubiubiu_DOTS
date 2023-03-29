@@ -86,14 +86,14 @@ namespace Battle.Weapon
             {
                 DeltaTime = SystemAPI.Time.DeltaTime
             };
-            state.Dependency = registrationJob.ScheduleParallel(state.Dependency);
+            state.Dependency = registrationJob.Schedule(state.Dependency);
             state.Dependency.Complete();
 
             WeaponMagazineHandlingComponentJob magazineHandlingJob = new WeaponMagazineHandlingComponentJob
             {
                 DeltaTime = SystemAPI.Time.DeltaTime
             };
-            state.Dependency = magazineHandlingJob.ScheduleParallel(state.Dependency);
+            state.Dependency = magazineHandlingJob.Schedule(state.Dependency);
             state.Dependency.Complete();
 
 
@@ -136,17 +136,10 @@ namespace Battle.Weapon
                 IsServer = state.WorldUnmanaged.IsServer(),
                 SpreadInfoBufferLookup = spreadInfoBufferLookup
             };
-            state.Dependency = bulletSpawningRequestJob.ScheduleParallel(state.Dependency);
+            state.Dependency = bulletSpawningRequestJob.Schedule(state.Dependency);
             state.Dependency.Complete();
 
-
-            // HandleRaycastWeaponShot(state.WorldUnmanaged.IsServer(),
-            //     SystemAPI.GetSingleton<NetworkTime>(), SystemAPI.GetSingleton<PhysicsWorldSingleton>().PhysicsWorld,
-            //     SystemAPI.GetSingleton<PhysicsWorldHistorySingleton>(), localToWorldLookup,
-            //     storedKinematicCharacterDataLookup,
-            //     characterComponentLookup, characterHitBoxComponentLookup, physicsColliderKeyEntityPair,
-            //     bulletSpawnVisualRequestBufferLookup,
-            //     ref hits, commandBuffer, ref state);
+            
             new RaycastWeaponShotJob()
             {
                 RaycastHits = hits,
@@ -254,6 +247,7 @@ namespace Battle.Weapon
 
             }
 
+            [BurstCompile]
             private void Reload(Entity entity, ref WeaponMagazineComponent magazine,
                 ref WeaponReloadComponent reloadComponent)
             {
@@ -261,6 +255,7 @@ namespace Battle.Weapon
                 reloadComponent.ReloadTimeLeft = magazine.ReloadTime;
             }
 
+            [BurstCompile]
             private void FinishedReload(Entity entity, ref WeaponMagazineComponent magazine,
                 ref WeaponReloadComponent reloadComponent)
             {
@@ -573,7 +568,10 @@ namespace Battle.Weapon
             public EntityManager EntityManager;
             public int LocalNetworkId;
             public bool IsServer;
+            
+            
 
+            [BurstCompile]
             void Execute(Entity entity, ref ActiveWeaponComponent activeWeapon, GhostOwnerComponent ghostOwnerComponent)
             {
                 if (activeWeapon.WeaponEntity != activeWeapon.PreviousWeaponEntity)
