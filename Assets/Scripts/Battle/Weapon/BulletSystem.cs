@@ -21,8 +21,8 @@ namespace Battle.Weapon
     {
         private ComponentLookup<Bullet> bulletLookup;
         private ComponentLookup<CharacterHitBoxComponent> hitBoxLookup;
-        private ComponentLookup<NetworkIdComponent> networkIdLookup;
-        private ComponentLookup<GhostOwnerComponent> ghostOwnerLookup;
+        private ComponentLookup<NetworkId> networkIdLookup;
+        private ComponentLookup<GhostOwner> ghostOwnerLookup;
         private BufferLookup<CharacterHitBoxEntityBuffer> hitBoxEntityBufferLookup;
         private BufferLookup<PhysicsColliderKeyEntityPair> physicsColliderKeyEntityPairBufferLookup;
         private ComponentLookup<BulletOwner> bulletOwnerLookup;
@@ -32,8 +32,8 @@ namespace Battle.Weapon
             state.RequireForUpdate<WeaponComponent>();
             bulletLookup = state.GetComponentLookup<Bullet>();
             hitBoxLookup = state.GetComponentLookup<CharacterHitBoxComponent>();
-            networkIdLookup = state.GetComponentLookup<NetworkIdComponent>(true);
-            ghostOwnerLookup = state.GetComponentLookup<GhostOwnerComponent>(true);
+            networkIdLookup = state.GetComponentLookup<NetworkId>(true);
+            ghostOwnerLookup = state.GetComponentLookup<GhostOwner>(true);
             hitBoxEntityBufferLookup = state.GetBufferLookup<CharacterHitBoxEntityBuffer>(true);
             physicsColliderKeyEntityPairBufferLookup = state.GetBufferLookup<PhysicsColliderKeyEntityPair>(true);
             bulletOwnerLookup = state.GetComponentLookup<BulletOwner>(true);
@@ -108,7 +108,7 @@ namespace Battle.Weapon
             public EntityCommandBuffer.ParallelWriter CommandBuffer;
             
             [Unity.Collections.ReadOnly]
-            public ComponentLookup<GhostOwnerComponent> GhostOwnerLookup;
+            public ComponentLookup<GhostOwner> GhostOwnerLookup;
 
             void Execute(Entity entity, [ChunkIndexInQuery] int chunkIndexInQuery, 
                 ref DynamicBuffer<BulletSpawnRequestBuffer> spawnRequestBuffer)
@@ -136,7 +136,7 @@ namespace Battle.Weapon
                         {
                             NetworkId = GhostOwnerLookup[spawnRequestBuffer[i].OwnerCharacter].NetworkId;
                         }
-                        CommandBuffer.SetComponent(chunkIndexInQuery, bullet, new GhostOwnerComponent
+                        CommandBuffer.SetComponent(chunkIndexInQuery, bullet, new GhostOwner
                         {
                             NetworkId = NetworkId,
                         });
@@ -382,9 +382,9 @@ namespace Battle.Weapon
         public void OnUpdate(ref SystemState state)
         {
             int localNetId = -1;
-            if (SystemAPI.HasSingleton<NetworkIdComponent>())
+            if (SystemAPI.HasSingleton<NetworkId>())
             {
-                localNetId = SystemAPI.GetSingleton<NetworkIdComponent>().Value;
+                localNetId = SystemAPI.GetSingleton<NetworkId>().Value;
             }
 
             var commandBuffer = SystemAPI.GetSingletonRW<PostPredictionPreTransformsECBSystem.Singleton>().ValueRW

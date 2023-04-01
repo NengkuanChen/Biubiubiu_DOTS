@@ -63,11 +63,11 @@ namespace Battle.CharacterSpawn
                 });
                 
 
-                commandBuffer.SetComponent(weaponEntity, new GhostOwnerComponent
+                commandBuffer.SetComponent(weaponEntity, new GhostOwner
                 {
                     NetworkId = spawnRequest.ValueRO.ForConnectionId
                 });
-                commandBuffer.SetComponent(characterGhost, new GhostOwnerComponent
+                commandBuffer.SetComponent(characterGhost, new GhostOwner
                 {
                     NetworkId = spawnRequest.ValueRO.ForConnectionId,
                 });

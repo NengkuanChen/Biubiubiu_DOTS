@@ -20,7 +20,7 @@ namespace UI
         
         public void OnUpdate(ref SystemState state)
         {
-            var localNetworkId = SystemAPI.GetSingleton<NetworkIdComponent>().Value;
+            var localNetworkId = SystemAPI.GetSingleton<NetworkId>().Value;
             UpdatePlayerAmmoAmount(ref state, localNetworkId);
             UpdatePlayerHealthBar(ref state, localNetworkId);
             UpdatePingShow(ref state);
@@ -30,10 +30,10 @@ namespace UI
         private void UpdatePingShow(ref SystemState state)
         {
             var framerateForm = BattleForm.Singleton<FramerateForm>();
-            EntityQuery networkAckQuery = new EntityQueryBuilder(Allocator.Temp).WithAll<NetworkSnapshotAckComponent>().Build(state.EntityManager);
-            if (networkAckQuery.HasSingleton<NetworkSnapshotAckComponent>())
+            EntityQuery networkAckQuery = new EntityQueryBuilder(Allocator.Temp).WithAll<NetworkSnapshotAck>().Build(state.EntityManager);
+            if (networkAckQuery.HasSingleton<NetworkSnapshotAck>())
             {
-                NetworkSnapshotAckComponent networkAck = networkAckQuery.GetSingleton<NetworkSnapshotAckComponent>();
+                NetworkSnapshotAck networkAck = networkAckQuery.GetSingleton<NetworkSnapshotAck>();
                 framerateForm.UpdatePing((int)networkAck.EstimatedRTT);
             }
         }
@@ -42,7 +42,7 @@ namespace UI
         {
             var battleForm = BattleForm.Singleton<BattleForm>();
             foreach (var (healthComponent, ghostOwner) in 
-                     SystemAPI.Query <RefRO<Health>, RefRO<GhostOwnerComponent>>())
+                     SystemAPI.Query <RefRO<Health>, RefRO<GhostOwner>>())
             {
                 if (ghostOwner.ValueRO.NetworkId == localNetworkId)
                 {
@@ -57,7 +57,7 @@ namespace UI
         {
             var battleForm = BattleForm.Singleton<BattleForm>();
             foreach (var (reloadComponent, weaponMagazineComponent, ghostOwner) in 
-                     SystemAPI.Query <RefRO<WeaponReloadComponent>, RefRO<WeaponMagazineComponent>, RefRO<GhostOwnerComponent>>())
+                     SystemAPI.Query <RefRO<WeaponReloadComponent>, RefRO<WeaponMagazineComponent>, RefRO<GhostOwner>>())
             {
                 if (ghostOwner.ValueRO.NetworkId == localNetworkId)
                 {

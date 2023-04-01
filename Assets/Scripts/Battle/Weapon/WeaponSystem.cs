@@ -153,7 +153,7 @@ namespace Battle.Weapon
                 CharacterHitBoxComponentLookUp = characterHitBoxComponentLookup,
                 PhysicsWorld = SystemAPI.GetSingleton<PhysicsWorldSingleton>().PhysicsWorld,
                 NetworkTime = SystemAPI.GetSingleton<NetworkTime>(),
-            }.Schedule(state.Dependency).Complete();
+            }.Schedule();
             
         }
 
@@ -165,7 +165,7 @@ namespace Battle.Weapon
             [BurstCompile]
             void Execute(Entity entity, ref WeaponFiringComponent firingComponent,
                 ref WeaponControlComponent weaponControl, ref WeaponComponent weaponComponent,
-                in GhostOwnerComponent ghostOwner)
+                in GhostOwner ghostOwner)
             {
                 firingComponent.TickShotTimer += DeltaTime;
                 firingComponent.TickBulletsCounter = 0;
@@ -217,7 +217,7 @@ namespace Battle.Weapon
             [BurstCompile]
             void Execute(Entity entity, ref WeaponFiringComponent weaponFiringComponent,
                 ref WeaponMagazineComponent magazine, ref WeaponReloadComponent reloadComponent,
-                ref WeaponControlComponent weaponControl, in GhostOwnerComponent ghostOwner)
+                ref WeaponControlComponent weaponControl, in GhostOwner ghostOwner)
             {
                 if (reloadComponent.IsReloading)
                 {
@@ -313,7 +313,7 @@ namespace Battle.Weapon
                 ref WeaponOwnerComponent ownerComponent,
                 ref DynamicBuffer<BulletSpawnRequestBuffer> bulletSpawnRequestBuffer,
                 ref WeaponComponent weaponComponent,
-                in GhostOwnerComponent ghostOwner)
+                in GhostOwner ghostOwner)
             {
                 if (weaponFiringComponent.IsFiring)
                 {
@@ -538,7 +538,7 @@ namespace Battle.Weapon
             var localNetworkId = -1;
             if (!isServer)
             {
-                localNetworkId = SystemAPI.GetSingleton<NetworkIdComponent>().Value;
+                localNetworkId = SystemAPI.GetSingleton<NetworkId>().Value;
             }
             WeaponSetupJob weaponSetupJob = new WeaponSetupJob
             {
@@ -572,7 +572,7 @@ namespace Battle.Weapon
             
 
             [BurstCompile]
-            void Execute(Entity entity, ref ActiveWeaponComponent activeWeapon, GhostOwnerComponent ghostOwnerComponent)
+            void Execute(Entity entity, ref ActiveWeaponComponent activeWeapon, GhostOwner ghostOwnerComponent)
             {
                 if (activeWeapon.WeaponEntity != activeWeapon.PreviousWeaponEntity)
                 {

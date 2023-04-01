@@ -5,7 +5,7 @@ namespace UI
     
     [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.ThinClientSimulation)]
     [UpdateInGroup(typeof(PresentationSystemGroup))]
-    public class UIUpdateSystemGroup : ComponentSystemGroup
+    public partial class UIUpdateSystemGroup : ComponentSystemGroup
     {
         
     }

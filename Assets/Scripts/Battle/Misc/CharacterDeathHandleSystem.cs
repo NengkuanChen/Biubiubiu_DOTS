@@ -95,6 +95,7 @@ public partial struct CharacterDeathHandleSystemServer : ISystem
         }.Schedule(state.Dependency).Complete();
         
         spawnPointLtWs.Dispose();
+        characterLtWs.Dispose();
     }
     
     [BurstCompile]
@@ -129,7 +130,7 @@ public partial struct CharacterDeathHandleSystemServer : ISystem
 
 
         [BurstCompile]
-        void Execute(Entity entity, ref CharacterWaitingRespawnComponent waitingRespawn, in FirstPersonPlayer player, in GhostOwnerComponent ghostOwnerComponent)
+        void Execute(Entity entity, ref CharacterWaitingRespawnComponent waitingRespawn, in FirstPersonPlayer player, in GhostOwner ghostOwnerComponent)
         {
             waitingRespawn.RespawnTime -= Time.DeltaTime;
             if (waitingRespawn.RespawnTime <= 0)

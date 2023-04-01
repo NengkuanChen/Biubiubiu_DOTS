@@ -19,7 +19,7 @@ namespace Lobby
         public void OnCreate(ref SystemState state)
         {
             var builder = new EntityQueryBuilder(Allocator.Temp)
-                .WithAll<NetworkIdComponent>()
+                .WithAll<NetworkId>()
                 .WithNone<NetworkStreamInLobby>()
                 .WithAll<NetworkStreamConnection>();
             state.RequireForUpdate(state.GetEntityQuery(builder));
@@ -36,7 +36,7 @@ namespace Lobby
         {
             var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
             
-            foreach (var (id, entity) in SystemAPI.Query<RefRO<NetworkIdComponent>>().WithEntityAccess().WithNone<NetworkStreamInLobby>())
+            foreach (var (id, entity) in SystemAPI.Query<RefRO<NetworkId>>().WithEntityAccess().WithNone<NetworkStreamInLobby>())
             {
                 commandBuffer.AddComponent<NetworkStreamInLobby>(entity);
                 
@@ -47,7 +47,7 @@ namespace Lobby
                 });
                 MainMenuForm.Singleton<MainMenuForm>().OnConnectedToServer();
                 
-                commandBuffer.AddComponent(req, new SendRpcCommandRequestComponent { TargetConnection = entity });
+                commandBuffer.AddComponent(req, new SendRpcCommandRequest { TargetConnection = entity });
             }
             commandBuffer.Playback(state.EntityManager);
         }
@@ -59,7 +59,7 @@ namespace Lobby
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
     public partial struct LobbySystemServer: ISystem
     {
-        private ComponentLookup<NetworkIdComponent> networkIdFromEntity;
+        private ComponentLookup<NetworkId> networkIdFromEntity;
         // private Dictionary<int, PlayerIdentity> playerIdentityDictionary;
 
 
@@ -68,9 +68,9 @@ namespace Lobby
             // state.RequireForUpdate<PlayerIdentitySpawner>();
             var builder = new EntityQueryBuilder(Allocator.Temp)
                 .WithAll<PlayerJoinRequest>()
-                .WithAll<ReceiveRpcCommandRequestComponent>();
+                .WithAll<ReceiveRpcCommandRequest>();
             state.RequireForUpdate(state.GetEntityQuery(builder));
-            networkIdFromEntity = state.GetComponentLookup<NetworkIdComponent>(true);
+            networkIdFromEntity = state.GetComponentLookup<NetworkId>(true);
         }
 
         public void OnDestroy(ref SystemState state)
@@ -88,7 +88,7 @@ namespace Lobby
             networkIdFromEntity.Update(ref state); 
             
 
-            foreach (var (reqSrc,reqEntity) in SystemAPI.Query<RefRO<ReceiveRpcCommandRequestComponent>>().WithAll<PlayerJoinRequest>().WithEntityAccess())
+            foreach (var (reqSrc,reqEntity) in SystemAPI.Query<RefRO<ReceiveRpcCommandRequest>>().WithAll<PlayerJoinRequest>().WithEntityAccess())
             {
                 // commandBuffer.AddComponent<NetworkStreamInGame>(reqSrc.ValueRO.SourceConnection);
                 var networkIdComponent = networkIdFromEntity[reqSrc.ValueRO.SourceConnection];
@@ -125,7 +125,7 @@ namespace Lobby
                         LobbyPositionID = value.ValueRO.LobbyPositionID,
                         IsReady = value.ValueRO.IsReady
                     });
-                    commandBuffer.AddComponent(playerInfoUpdate, new SendRpcCommandRequestComponent { TargetConnection = Entity.Null });
+                    commandBuffer.AddComponent(playerInfoUpdate, new SendRpcCommandRequest { TargetConnection = Entity.Null });
                 }
                 var selfIdentityUpdate = commandBuffer.CreateEntity();
                 commandBuffer.AddComponent(selfIdentityUpdate, new PlayerIdentityUpdate
@@ -136,7 +136,7 @@ namespace Lobby
                     LobbyPositionID = positionID,
                     IsReady = false
                 });
-                commandBuffer.AddComponent(selfIdentityUpdate, new SendRpcCommandRequestComponent { TargetConnection = Entity.Null });
+                commandBuffer.AddComponent(selfIdentityUpdate, new SendRpcCommandRequest { TargetConnection = Entity.Null });
                 // commandBuffer.SetComponent(player, new GhostOwnerComponent { NetworkId = networkIdComponent.Value});
                 // Add the player to the linked entity group so it is destroyed automatically on disconnect
                 // commandBuffer.AppendToBuffer(reqSrc.ValueRO.SourceConnection, new LinkedEntityGroup{Value = player});
@@ -151,14 +151,14 @@ namespace Lobby
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
     public partial struct PlayerReadySystemServer : ISystem
     {
-        private ComponentLookup<NetworkIdComponent> networkIdFromEntity;
+        private ComponentLookup<NetworkId> networkIdFromEntity;
         public void OnCreate(ref SystemState state)
         {
             var builder = new EntityQueryBuilder(Allocator.Temp)
                 .WithAll<PlayerReadyRequest>()
-                .WithAll<ReceiveRpcCommandRequestComponent>();
+                .WithAll<ReceiveRpcCommandRequest>();
             state.RequireForUpdate(state.GetEntityQuery(builder));
-            networkIdFromEntity = state.GetComponentLookup<NetworkIdComponent>(true);
+            networkIdFromEntity = state.GetComponentLookup<NetworkId>(true);
         }
 
         public void OnDestroy(ref SystemState state)
@@ -170,7 +170,7 @@ namespace Lobby
         {
             networkIdFromEntity.Update(ref state);
             var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
-            foreach (var (request, entity) in SystemAPI.Query<RefRO<ReceiveRpcCommandRequestComponent>>().WithAll<PlayerReadyRequest>().WithEntityAccess())
+            foreach (var (request, entity) in SystemAPI.Query<RefRO<ReceiveRpcCommandRequest>>().WithAll<PlayerReadyRequest>().WithEntityAccess())
             {
                 var playerID = networkIdFromEntity[request.ValueRO.SourceConnection].Value;
                 bool allReady = true;
@@ -193,7 +193,7 @@ namespace Lobby
                         });
                         Debug.Log($"Player {playerIdentity.ValueRO.PlayerNickname} is ready: {playerIdentity.ValueRO.IsReady}");
                         LobbyForm.Singleton<LobbyForm>().OnPlayerReady(playerID, playerIdentity.ValueRW.IsReady);
-                        commandBuffer.AddComponent(playerIdentityUpdate, new SendRpcCommandRequestComponent { TargetConnection = Entity.Null });
+                        commandBuffer.AddComponent(playerIdentityUpdate, new SendRpcCommandRequest { TargetConnection = Entity.Null });
                     }
                     if (!playerIdentity.ValueRO.IsReady)
                     {
@@ -222,7 +222,7 @@ namespace Lobby
                 LoadSceneName = "Battle",
                 UnloadSceneName = "Lobby",
             });
-            commandBuffer.AddComponent(sceneLoadRequest, new SendRpcCommandRequestComponent { TargetConnection = Entity.Null });
+            commandBuffer.AddComponent(sceneLoadRequest, new SendRpcCommandRequest { TargetConnection = Entity.Null });
             var loadingSceneEntity = commandBuffer.CreateEntity();
             commandBuffer.AddComponent(loadingSceneEntity, new StartLoadSceneComponent()
             {
@@ -252,7 +252,7 @@ namespace Lobby
         {
             var builder = new EntityQueryBuilder(Allocator.Temp)
                 .WithAll<PlayerIdentityUpdate>()
-                .WithAll<ReceiveRpcCommandRequestComponent>();
+                .WithAll<ReceiveRpcCommandRequest>();
             state.RequireForUpdate(state.GetEntityQuery(builder));
         }
 
@@ -264,7 +264,7 @@ namespace Lobby
         public void OnUpdate(ref SystemState state)
         {
             var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
-            foreach (var (playerIdentity, e) in SystemAPI.Query<PlayerIdentityUpdate>().WithAll<ReceiveRpcCommandRequestComponent>().WithEntityAccess())
+            foreach (var (playerIdentity, e) in SystemAPI.Query<PlayerIdentityUpdate>().WithAll<ReceiveRpcCommandRequest>().WithEntityAccess())
             {
                 LobbyForm.Singleton<LobbyForm>().OnPlayerInfoUpdate(playerIdentity.InGameID,
                     playerIdentity.PlayerNickname.ToString(), playerIdentity.TeamID, playerIdentity.LobbyPositionID,

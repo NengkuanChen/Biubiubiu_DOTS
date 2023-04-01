@@ -63,7 +63,7 @@ namespace UI
                     targetTeamID = teamID,
                     targetPositionID = positionID
                 });
-                em.AddComponentData<SendRpcCommandRequestComponent>(e, new SendRpcCommandRequestComponent
+                em.AddComponentData<SendRpcCommandRequest>(e, new SendRpcCommandRequest
                 {
                     TargetConnection = default
                 });

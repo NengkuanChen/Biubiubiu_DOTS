@@ -216,7 +216,7 @@ namespace Rival
                     InterpolateRotation = authoringProperties.InterpolateRotation ? (byte)1 : (byte)0,
                     InterpolatePosition = authoringProperties.InterpolatePosition ? (byte)1 : (byte)0,
                 });
-                dstManager.AddComponentData(entity, new PropagateLocalToWorld());
+                // dstManager.AddComponentData(entity, new PropagateLocalToWorld());
             }
         }
 
@@ -253,7 +253,7 @@ namespace Rival
                     InterpolateRotation = authoringProperties.InterpolateRotation ? (byte)1 : (byte)0,
                     InterpolatePosition = authoringProperties.InterpolatePosition ? (byte)1 : (byte)0,
                 });
-                commandBuffer.AddComponent(entity, new PropagateLocalToWorld());
+                // commandBuffer.AddComponent(entity, new PropagateLocalToWorld());
             }
         }
 
@@ -300,7 +300,7 @@ namespace Rival
                     InterpolateRotation = authoringProperties.InterpolateRotation ? (byte)1 : (byte)0,
                     InterpolatePosition = authoringProperties.InterpolatePosition ? (byte)1 : (byte)0,
                 });
-                baker.AddComponent(new PropagateLocalToWorld());
+                // baker.AddComponent(new PropagateLocalToWorld());
             }
         }
 

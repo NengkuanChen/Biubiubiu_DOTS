@@ -85,7 +85,7 @@ namespace Lobby
         public void OnCreate(ref SystemState state)
         {
             var builder = new EntityQueryBuilder(Allocator.Temp)
-                .WithAll<ReceiveRpcCommandRequestComponent>()
+                .WithAll<ReceiveRpcCommandRequest>()
                 .WithAll<StartLoadingSceneCommand>();
             state.RequireForUpdate(state.GetEntityQuery(builder));
         }
@@ -102,7 +102,7 @@ namespace Lobby
             var loadSceneName = new FixedString32Bytes();
             var unloadSceneName = new FixedString32Bytes();
             foreach (var (request, entity) in SystemAPI.Query<RefRO<StartLoadingSceneCommand>>()
-                         .WithAll<ReceiveRpcCommandRequestComponent>().WithEntityAccess())
+                         .WithAll<ReceiveRpcCommandRequest>().WithEntityAccess())
             {
                 loadSceneName = request.ValueRO.LoadSceneName;
                 unloadSceneName = request.ValueRO.UnloadSceneName;
@@ -134,7 +134,7 @@ namespace Lobby
             };
             var loadSceneRpc = entityManager.CreateEntity();
             entityManager.AddComponentData(loadSceneRpc, finishedLoadingSceneRespond);
-            entityManager.AddComponentData(loadSceneRpc, new SendRpcCommandRequestComponent
+            entityManager.AddComponentData(loadSceneRpc, new SendRpcCommandRequest
             {
                 TargetConnection = default
             });
@@ -147,16 +147,16 @@ namespace Lobby
     public partial struct ReceiveFinishedLoadingSceneRespondSystem : ISystem
     {
 
-        private ComponentLookup<NetworkIdComponent> networkIdFromEntity;
+        private ComponentLookup<NetworkId> networkIdFromEntity;
 
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             var builder = new EntityQueryBuilder(Allocator.Temp)
-                .WithAll<ReceiveRpcCommandRequestComponent>()
+                .WithAll<ReceiveRpcCommandRequest>()
                 .WithAll<FinishedLoadingSceneRespond>();
             state.RequireForUpdate(state.GetEntityQuery(builder));
-            networkIdFromEntity = state.GetComponentLookup<NetworkIdComponent>(true);
+            networkIdFromEntity = state.GetComponentLookup<NetworkId>(true);
         }
 
         public void OnDestroy(ref SystemState state)
@@ -170,7 +170,7 @@ namespace Lobby
             var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
             networkIdFromEntity.Update(ref state);
             var hasFinishedLoading = false;
-            foreach (var (request, entity) in SystemAPI.Query<RefRO<ReceiveRpcCommandRequestComponent>>()
+            foreach (var (request, entity) in SystemAPI.Query<RefRO<ReceiveRpcCommandRequest>>()
                          .WithAll<FinishedLoadingSceneRespond>().WithEntityAccess())
             {
                 hasFinishedLoading = true;

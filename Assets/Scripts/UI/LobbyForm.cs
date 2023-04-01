@@ -47,7 +47,7 @@ namespace UI
                 var newEntity = WorldGetter.GetClientWorld().EntityManager.CreateEntity();
                 WorldGetter.GetClientWorld().EntityManager.AddComponentData(newEntity, new PlayerReadyRequest());
                 WorldGetter.GetClientWorld().EntityManager
-                    .AddComponentData(newEntity, new SendRpcCommandRequestComponent(){ TargetConnection = default});
+                    .AddComponentData(newEntity, new SendRpcCommandRequest(){ TargetConnection = default});
                 
             }
         }

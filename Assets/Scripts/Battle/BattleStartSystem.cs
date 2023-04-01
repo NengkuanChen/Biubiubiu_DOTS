@@ -20,14 +20,14 @@ namespace Game.Battle
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
     public partial struct BattleStartSystemServer: ISystem
     {
-        private ComponentLookup<NetworkIdComponent> networkIdFromEntity;
+        private ComponentLookup<NetworkId> networkIdFromEntity;
         
 
         public void OnCreate(ref SystemState state)
         {
             var builder = new EntityQueryBuilder(Allocator.Temp).WithAny<ServerReadyToStartTag, ClientReadyToStartTag>();
             state.RequireForUpdate(state.GetEntityQuery(builder));
-            networkIdFromEntity = state.GetComponentLookup<NetworkIdComponent>(true);
+            networkIdFromEntity = state.GetComponentLookup<NetworkId>(true);
             state.RequireForUpdate<BattleEntitySpawner>();
             state.RequireForUpdate<SpawnPoint>();
         }
@@ -61,7 +61,7 @@ namespace Game.Battle
             {
                 var req = commandBuffer.CreateEntity();
                 commandBuffer.AddComponent<StartGameCommand>(req);
-                commandBuffer.AddComponent(req, new SendRpcCommandRequestComponent { TargetConnection = Entity.Null });
+                commandBuffer.AddComponent(req, new SendRpcCommandRequest { TargetConnection = Entity.Null });
                 commandBuffer.DestroyEntity(serverReadyEntity);
                 commandBuffer.DestroyEntity(clientReadyEntity);
                 var gameEntitySpawner = SystemAPI.GetSingleton<BattleEntitySpawner>();
@@ -92,7 +92,7 @@ namespace Game.Battle
                     
                 });
                 var networkId = networkIdFromEntity[playerIdentity.SourceConnection];
-                commandBuffer.SetComponent(playerEntity, new GhostOwnerComponent
+                commandBuffer.SetComponent(playerEntity, new GhostOwner
                 {
                     NetworkId = networkId.Value
                 });
@@ -124,7 +124,7 @@ namespace Game.Battle
         public void OnCreate(ref SystemState state)
         {
             var builder = new EntityQueryBuilder(Allocator.Temp)
-                .WithAll<ReceiveRpcCommandRequestComponent>()
+                .WithAll<ReceiveRpcCommandRequest>()
                 .WithAll<StartGameCommand>();
             state.RequireForUpdate(state.GetEntityQuery(builder));
             // state.RequireForUpdate<FirstPersonCharacterComponent>();
@@ -138,7 +138,7 @@ namespace Game.Battle
         public void OnUpdate(ref SystemState state)
         {
             var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
-            foreach (var (request, entity) in SystemAPI.Query<RefRO<StartGameCommand>>().WithAll<ReceiveRpcCommandRequestComponent>().WithEntityAccess())
+            foreach (var (request, entity) in SystemAPI.Query<RefRO<StartGameCommand>>().WithAll<ReceiveRpcCommandRequest>().WithEntityAccess())
             {
                 GameStart(ref commandBuffer, ref state);
                 commandBuffer.DestroyEntity(entity);
@@ -149,7 +149,7 @@ namespace Game.Battle
         private void GameStart(ref EntityCommandBuffer commandBuffer, ref SystemState state)
         {
             UIManager.Singleton.CloseForm<LoadingForm>();
-            commandBuffer.AddComponent(SystemAPI.GetSingletonEntity<NetworkIdComponent>(), new NetworkStreamInGame());
+            commandBuffer.AddComponent(SystemAPI.GetSingletonEntity<NetworkId>(), new NetworkStreamInGame());
             Cursor.lockState = CursorLockMode.Locked;
             
         }
@@ -169,10 +169,10 @@ namespace Game.Battle
 
         public void OnUpdate(ref SystemState state)
         {
-            int localNetworkId = SystemAPI.GetSingleton<NetworkIdComponent>().Value;
+            int localNetworkId = SystemAPI.GetSingleton<NetworkId>().Value;
             var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
             childLookup.Update(ref state);
-            foreach (var (weaponLayerSetupRequest, ghostOwner, entity) in SystemAPI.Query<WeaponLayerSetupRequest, RefRO<GhostOwnerComponent>>().WithEntityAccess())
+            foreach (var (weaponLayerSetupRequest, ghostOwner, entity) in SystemAPI.Query<WeaponLayerSetupRequest, RefRO<GhostOwner>>().WithEntityAccess())
             {
                 if (localNetworkId == ghostOwner.ValueRO.NetworkId)
                 {
@@ -199,7 +199,7 @@ namespace Game.Battle
             var builder = new EntityQueryBuilder(Allocator.Temp)
                 .WithAll<FirstPersonCharacterComponent>()
                 .WithAll<OwningPlayer>()
-                .WithAll<GhostOwnerComponent>()
+                .WithAll<GhostOwner>()
                 .WithNone<CharacterInBattleTag>();
             state.RequireForUpdate<BattleEntitySpawner>();
             state.RequireForUpdate(state.GetEntityQuery(builder));
@@ -212,10 +212,10 @@ namespace Game.Battle
 
         public void OnUpdate(ref SystemState state)
         {
-            int localNetworkId = SystemAPI.GetSingleton<NetworkIdComponent>().Value;
+            int localNetworkId = SystemAPI.GetSingleton<NetworkId>().Value;
 
             var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
-            foreach (var (character, owningPlayer, ghostOwner, entity) in SystemAPI.Query<FirstPersonCharacterComponent, OwningPlayer, GhostOwnerComponent>().WithNone<CharacterInBattleTag>().WithEntityAccess())
+            foreach (var (character, owningPlayer, ghostOwner, entity) in SystemAPI.Query<FirstPersonCharacterComponent, OwningPlayer, GhostOwner>().WithNone<CharacterInBattleTag>().WithEntityAccess())
             {
                 if (ghostOwner.NetworkId == localNetworkId)
                 {

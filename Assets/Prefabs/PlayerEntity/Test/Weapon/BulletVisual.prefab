@@ -97,5 +97,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   MaxDistance: 100
-  Speed: 100
+  Speed: 300
   HitVfxPrefab: {fileID: 0}

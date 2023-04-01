@@ -46,7 +46,7 @@ namespace Battle.Weapon
                 HealthRecoveryLookup = healthRecoveryLookup,
                 DamageSourceRecordBufferLookup = damageSourceRecordBufferLookup,
                 EntityCommandBuffer = commandBuffer.AsParallelWriter()
-            }.ScheduleParallel(state.Dependency).Complete();
+            }.Schedule(state.Dependency).Complete();
         }
         
         public void OnDestroy(ref SystemState state)

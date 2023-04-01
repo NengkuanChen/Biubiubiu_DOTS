@@ -8,7 +8,7 @@ namespace Rival
     /// System group for the default character physics update
     /// </summary>
     [UpdateInGroup(typeof(AfterPhysicsSystemGroup))]
-    public class KinematicCharacterPhysicsUpdateGroup : ComponentSystemGroup
+    public partial class KinematicCharacterPhysicsUpdateGroup : ComponentSystemGroup
     {
     }
     
@@ -18,7 +18,7 @@ namespace Rival
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(FixedStepSimulationSystemGroup))]
     [UpdateBefore(typeof(TransformSystemGroup))]
-    public class KinematicCharacterVariableUpdateGroup : ComponentSystemGroup
+    public partial class KinematicCharacterVariableUpdateGroup : ComponentSystemGroup
     {
     }
 }

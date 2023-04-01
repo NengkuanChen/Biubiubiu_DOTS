@@ -7,7 +7,7 @@ using Unity.Transforms;
 using UnityEngine;
 using Rival;
 
-public class DefaultVariantSystem : DefaultVariantSystemBase
+public partial class DefaultVariantSystem : DefaultVariantSystemBase
 {
     protected override void RegisterDefaultVariants(Dictionary<ComponentType, Rule> defaultVariants)
     {
